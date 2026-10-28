@@ -2,6 +2,8 @@ import 'package:dio/dio.dart';
 
 import '../../../core/network/api_failure.dart';
 import '../../../core/network/api_client.dart';
+import '../../employees/data/models/join_request_model.dart';
+import '../../employees/domain/entities/join_request_entity.dart';
 
 class InvitationRepository {
   InvitationRepository({Dio? client}) : _client = client ?? ApiClient.dio;
@@ -21,7 +23,7 @@ class InvitationRepository {
         return message;
       });
 
-  Future<List<Map<String, dynamic>>> getOwnRequests() => executeApiRequest(
+  Future<List<JoinRequestEntity>> getOwnRequests() => executeApiRequest(
     () async {
       final response = await _client.get<Map<String, dynamic>>(
         '/api/employees/join-requests/me',
@@ -34,7 +36,10 @@ class InvitationRepository {
       if (entries.any((entry) => entry is! Map<String, dynamic>)) {
         throw const ApiFailure('Data status permintaan tidak valid.');
       }
-      return entries.cast<Map<String, dynamic>>();
+      return entries
+          .cast<Map<String, dynamic>>()
+          .map(JoinRequestModel.fromJson)
+          .toList(growable: false);
     },
   );
 

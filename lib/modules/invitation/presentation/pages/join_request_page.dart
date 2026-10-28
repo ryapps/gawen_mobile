@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/widgets/gawen_widgets.dart';
+import '../../../employees/domain/entities/join_request_entity.dart';
 import '../bloc/invitation_bloc.dart';
 
 class JoinRequestsPage extends StatefulWidget {
@@ -112,24 +113,25 @@ class _JoinRequestsPageState extends State<JoinRequestsPage> {
         ),
       );
 
-  Widget _requestCard(Map<String, dynamic> request) {
-    final organization = request['organization'];
-    final orgName =
-        organization is Map<String, dynamic> && organization['name'] is String
-        ? organization['name'] as String
-        : 'Tempat kerja';
-    final status = request['status'] is String
-        ? request['status'] as String
-        : 'UNKNOWN';
-    final (label, color, icon) = switch (status) {
-      'PENDING' => (
+  Widget _requestCard(JoinRequestEntity request) {
+    final orgName = request.organization?.name ?? 'Tempat kerja';
+    final (label, color, icon) = switch (request.status) {
+      null => ('Status belum tersedia', GawenColors.muted, Icons.help_outline),
+      JoinRequestStatus.pending => (
         'Menunggu persetujuan',
         GawenColors.warning,
         Icons.schedule,
       ),
-      'APPROVED' => ('Disetujui', GawenColors.primary, Icons.check_circle),
-      'REJECTED' => ('Ditolak', GawenColors.error, Icons.cancel_outlined),
-      _ => ('Status tidak diketahui', GawenColors.muted, Icons.help_outline),
+      JoinRequestStatus.approved => (
+        'Disetujui',
+        GawenColors.primary,
+        Icons.check_circle,
+      ),
+      JoinRequestStatus.rejected => (
+        'Ditolak',
+        GawenColors.error,
+        Icons.cancel_outlined,
+      ),
     };
     return Container(
       margin: const EdgeInsets.only(top: 16),

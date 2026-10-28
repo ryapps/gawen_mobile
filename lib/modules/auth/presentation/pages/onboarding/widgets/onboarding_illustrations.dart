@@ -30,7 +30,10 @@ class ScheduleIllustration extends StatelessWidget {
             SizedBox(width: 9),
             Text(
               'Jadwal Minggu Ini',
-              style: TextStyle(fontWeight: FontWeight.w700, color: GawenColors.primary),
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                color: GawenColors.primary,
+              ),
             ),
           ],
         ),
@@ -63,7 +66,7 @@ class _Shift extends StatelessWidget {
           backgroundColor: name == 'Dewi' ? Colors.blue : color,
           child: Text(
             name[0],
-            style: const TextStyle(color:Colors.white, fontSize: 10),
+            style: const TextStyle(color: Colors.white, fontSize: 10),
           ),
         ),
         const SizedBox(width: 9),
@@ -73,11 +76,15 @@ class _Shift extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
           ),
           child: Text(
             shift,
-            style: TextStyle(color: color, fontWeight: FontWeight.w700, fontSize: 12),
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.w700,
+              fontSize: 12,
+            ),
           ),
         ),
       ],
@@ -113,14 +120,11 @@ class InsightIllustration extends StatelessWidget {
             left: 13,
             right: 13,
             child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 13,
-                vertical: 12,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 12),
               decoration: BoxDecoration(
                 color: Colors.white,
                 border: Border.all(
-                  color: GawenColors.border.withOpacity(0.5),
+                  color: GawenColors.border.withValues(alpha: 0.5),
                 ),
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: const [
@@ -235,16 +239,11 @@ class _InsightMiniCard extends StatelessWidget {
     return Container(
       width: 84,
       height: 68,
-      padding: const EdgeInsets.symmetric(
-        horizontal: 5,
-        vertical: 9,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 9),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(13),
-        border: Border.all(
-          color: GawenColors.border.withOpacity(0.5),
-        ),
+        border: Border.all(color: GawenColors.border.withValues(alpha: 0.5)),
         boxShadow: const [
           BoxShadow(
             color: Color(0x14214B36),
@@ -256,11 +255,7 @@ class _InsightMiniCard extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            icon,
-            color: color,
-            size: 19,
-          ),
+          Icon(icon, color: color, size: 19),
           const SizedBox(height: 5),
           FittedBox(
             fit: BoxFit.scaleDown,
@@ -279,4 +274,3 @@ class _InsightMiniCard extends StatelessWidget {
     );
   }
 }
-

@@ -25,9 +25,7 @@ abstract final class PasswordValidator {
     return null;
   }
 
-  static String? validateAuthPassword({
-    required String? password,
-  }) {
+  static String? validateAuthPassword({required String? password}) {
     final passwordValue = password ?? '';
     if (passwordValue.isEmpty) {
       return 'Kata sandi wajib diisi.';

@@ -40,6 +40,8 @@ Future<T> executeApiRequest<T>(Future<T> Function() request) async {
     return await request();
   } on DioException catch (error) {
     throw ApiFailure(dioErrorMessage(error));
+  } on FormatException catch (error) {
+    throw ApiFailure(error.message);
   } on PlatformException {
     throw const ApiFailure('Penyimpanan sesi aman tidak tersedia.');
   }

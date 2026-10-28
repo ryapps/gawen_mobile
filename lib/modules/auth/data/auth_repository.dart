@@ -1,20 +1,27 @@
 import 'package:dio/dio.dart';
 
+import '../../employees/data/models/join_request_model.dart';
+import '../../employees/data/models/membership_model.dart';
+import '../../employees/domain/entities/join_request_entity.dart';
+import '../../employees/domain/entities/membership_entity.dart';
+import '../domain/entities/membership_access.dart';
 import '../../../core/network/api_failure.dart';
 import '../../../core/network/api_client.dart';
-
-enum MembershipAccess { none, pending, active }
+import 'models/user_model.dart';
+import '../domain/entities/user_entity.dart';
 
 class RestoredSession {
   const RestoredSession({
     required this.user,
+    required this.memberships,
     required this.access,
     this.pendingRequest,
   });
 
-  final Map<String, dynamic> user;
+  final UserEntity user;
+  final List<MembershipEntity> memberships;
   final MembershipAccess access;
-  final Map<String, dynamic>? pendingRequest;
+  final JoinRequestEntity? pendingRequest;
 }
 
 class AuthRepository {
@@ -83,26 +90,30 @@ class AuthRepository {
             data['user'] is! Map<String, dynamic>) {
           throw const ApiFailure('Respons profil tidak valid dari server.');
         }
-        final user = data['user'] as Map<String, dynamic>;
-        final memberships = user['memberships'];
+        final rawUser = data['user'] as Map<String, dynamic>;
+        final memberships = rawUser['memberships'];
         if (memberships is! List ||
             memberships.any((item) => item is! Map<String, dynamic>)) {
           throw const ApiFailure('Data keanggotaan tidak valid dari server.');
         }
+        final user = UserModel.fromJson(rawUser);
+        final parsedMemberships = memberships
+            .cast<Map<String, dynamic>>()
+            .map(MembershipModel.fromJson)
+            .toList(growable: false);
         if (memberships.isNotEmpty) {
-          for (final membership in memberships.cast<Map<String, dynamic>>()) {
-            final role = membership['role'];
-            final organization = membership['organization'];
-            if ((role != 'OWNER' && role != 'EMPLOYEE') ||
-                organization is! Map<String, dynamic> ||
-                organization['id'] is! String ||
-                organization['name'] is! String) {
+          for (final membership in parsedMemberships) {
+            if (membership.organization == null) {
               throw const ApiFailure(
                 'Informasi keanggotaan tidak dapat diverifikasi.',
               );
             }
           }
-          return RestoredSession(user: user, access: MembershipAccess.active);
+          return RestoredSession(
+            user: user,
+            memberships: parsedMemberships,
+            access: MembershipAccess.active,
+          );
         }
 
         final requestResponse = await _client.get<Map<String, dynamic>>(
@@ -119,15 +130,17 @@ class AuthRepository {
         if (requests.any((item) => item is! Map<String, dynamic>)) {
           throw const ApiFailure('Data permintaan tidak valid dari server.');
         }
-        Map<String, dynamic>? pendingRequest;
+        JoinRequestEntity? pendingRequest;
         for (final item in requests.cast<Map<String, dynamic>>()) {
-          if (item['status'] == 'PENDING') {
-            pendingRequest = item;
+          final request = JoinRequestModel.fromJson(item);
+          if (request.status == JoinRequestStatus.pending) {
+            pendingRequest = request;
             break;
           }
         }
         return RestoredSession(
           user: user,
+          memberships: parsedMemberships,
           access: pendingRequest == null
               ? MembershipAccess.none
               : MembershipAccess.pending,

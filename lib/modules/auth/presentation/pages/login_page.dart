@@ -11,10 +11,16 @@ import '../bloc/auth_bloc.dart';
 import 'login_mode.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key, this.returnTo, this.invitationToken});
+  const LoginPage({
+    super.key,
+    this.returnTo,
+    this.invitationToken,
+    this.initialMode = LoginMode.employee,
+  });
 
   final String? returnTo;
   final String? invitationToken;
+  final LoginMode initialMode;
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -24,7 +30,13 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  LoginMode _mode = LoginMode.employee;
+  late LoginMode _mode;
+
+  @override
+  void initState() {
+    super.initState();
+    _mode = widget.initialMode;
+  }
 
   @override
   void dispose() {
@@ -83,12 +95,15 @@ class _LoginPageState extends State<LoginPage> {
                 if (widget.invitationToken == null) ...[
                   Center(
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 3,vertical: 1.5),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 3,
+                        vertical: 1.5,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFF1FAF5),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: GawenColors.primary.withOpacity(0.12),
+                          color: GawenColors.primary.withValues(alpha: 0.12),
                         ),
                       ),
                       child: SegmentedButton<LoginMode>(
@@ -97,7 +112,9 @@ class _LoginPageState extends State<LoginPage> {
                           backgroundColor:
                               WidgetStateProperty.resolveWith<Color>((states) {
                                 if (states.contains(WidgetState.selected)) {
-                                  return GawenColors.primary.withOpacity(0.16);
+                                  return GawenColors.primary.withValues(
+                                    alpha: 0.16,
+                                  );
                                 }
                                 return Colors.transparent;
                               }),
@@ -131,7 +148,7 @@ class _LoginPageState extends State<LoginPage> {
                             BorderSide(color: Colors.transparent),
                           ),
                           overlayColor: WidgetStatePropertyAll(
-                            GawenColors.primary.withOpacity(0.08),
+                            GawenColors.primary.withValues(alpha: 0.08),
                           ),
                           animationDuration: const Duration(milliseconds: 250),
                           visualDensity: VisualDensity.standard,
@@ -193,7 +210,10 @@ class _LoginPageState extends State<LoginPage> {
                         icon: Icons.lock_outline,
                         obscureText: true,
                         textInputAction: TextInputAction.done,
-                        validator: (value) => PasswordValidator.validateAuthPassword(password: value),
+                        validator: (value) =>
+                            PasswordValidator.validateAuthPassword(
+                              password: value,
+                            ),
                       ),
 
                       SizedBox(height: 18),
@@ -267,7 +287,10 @@ class _LoginPageState extends State<LoginPage> {
                             minimumSize: Size.zero,
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
-                          child: const Text('Daftar sekarang', style: TextStyle(fontWeight: FontWeight.w700)),
+                          child: const Text(
+                            'Daftar sekarang',
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          ),
                         ),
                       ],
                     ),

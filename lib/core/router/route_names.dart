@@ -10,6 +10,15 @@ abstract final class AppRoutes {
   static const requests = '/requests';
   static const pending = '/pending';
   static const invitation = '/invitation';
+  static const employees = '/employees';
+  static const employeeDetail = '/employees/detail';
+  static const inviteEmployee = '/employees/invite';
+  static const organization = '/organization';
+  static const editOrganization = '/organization/edit';
+  static const schedule = '/schedule';
+  static const more = '/more';
+  static const team = '/team';
+  static const permission = '/permission';
 }
 
 String? safeAuthReturnPath(String? path) => switch (path) {

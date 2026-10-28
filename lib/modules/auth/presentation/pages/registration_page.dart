@@ -7,6 +7,7 @@ import '../../../../core/router/route_names.dart';
 import '../../../../core/widgets/gawen_widgets.dart';
 import '../bloc/auth_bloc.dart';
 import '../validators/password_validator.dart';
+import 'login_mode.dart';
 
 class RegistrationPage extends StatefulWidget {
   const RegistrationPage({
@@ -74,9 +75,11 @@ class _RegistrationPageState extends State<RegistrationPage> {
       );
       context.go(
         AppRoutes.login,
-        extra: widget.invitationToken == null
-            ? null
-            : InvitationLoginIntent(widget.invitationToken!),
+        extra: widget.invitationToken != null
+            ? InvitationLoginIntent(widget.invitationToken!)
+            : widget.isOwner
+            ? LoginMode.owner
+            : LoginMode.employee,
       );
     },
     builder: (context, state) {
@@ -179,7 +182,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                               password: _passwordController.text,
                             ),
                       ),
-                      
+
                       const SizedBox(height: 20),
                       SizedBox(
                         width: double.infinity,
@@ -222,7 +225,10 @@ class _RegistrationPageState extends State<RegistrationPage> {
                             minimumSize: Size.zero,
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
-                          child: const Text('Masuk', style: TextStyle(fontWeight: FontWeight.w700)),
+                          child: const Text(
+                            'Masuk',
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          ),
                         ),
                       ],
                     ),

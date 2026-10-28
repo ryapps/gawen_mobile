@@ -2,99 +2,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/network/api_failure.dart';
 import '../../data/auth_repository.dart';
+import 'auth_event.dart';
+import 'auth_state.dart';
 
-export '../../data/auth_repository.dart' show MembershipAccess;
-
-enum AuthStatus {
-  initial,
-  restoring,
-  loading,
-  unauthenticated,
-  authenticated,
-  registered,
-  failure,
-}
-
-class AuthState {
-  const AuthState({
-    this.status = AuthStatus.initial,
-    this.user,
-    this.message,
-    this.membershipAccess = MembershipAccess.none,
-    this.pendingRequest,
-  });
-
-  final AuthStatus status;
-  final Map<String, dynamic>? user;
-  final String? message;
-  final MembershipAccess membershipAccess;
-  final Map<String, dynamic>? pendingRequest;
-
-  bool get hasVerifiedSession =>
-      status == AuthStatus.authenticated ||
-      ((status == AuthStatus.loading || status == AuthStatus.failure) &&
-          user != null);
-
-  AuthState copyWith({
-    AuthStatus? status,
-    Map<String, dynamic>? user,
-    String? message,
-    MembershipAccess? membershipAccess,
-    Map<String, dynamic>? pendingRequest,
-    bool clearMessage = false,
-  }) => AuthState(
-    status: status ?? this.status,
-    user: user ?? this.user,
-    message: clearMessage ? null : message ?? this.message,
-    membershipAccess: membershipAccess ?? this.membershipAccess,
-    pendingRequest: pendingRequest ?? this.pendingRequest,
-  );
-}
-
-sealed class AuthEvent {
-  const AuthEvent();
-}
-
-final class SessionRestoreRequested extends AuthEvent {
-  const SessionRestoreRequested();
-}
-
-final class LoginSubmitted extends AuthEvent {
-  const LoginSubmitted({required this.email, required this.password});
-
-  final String email;
-  final String password;
-}
-
-final class OwnerRegistrationSubmitted extends AuthEvent {
-  const OwnerRegistrationSubmitted({
-    required this.name,
-    required this.organizationName,
-    required this.email,
-    required this.password,
-  });
-
-  final String name;
-  final String organizationName;
-  final String email;
-  final String password;
-}
-
-final class EmployeeRegistrationSubmitted extends AuthEvent {
-  const EmployeeRegistrationSubmitted({
-    required this.name,
-    required this.email,
-    required this.password,
-  });
-
-  final String name;
-  final String email;
-  final String password;
-}
-
-final class LogoutRequested extends AuthEvent {
-  const LogoutRequested();
-}
+export 'auth_event.dart';
+export 'auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   AuthBloc(this._repository) : super(const AuthState()) {
@@ -132,6 +44,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         AuthState(
           status: AuthStatus.authenticated,
           user: session.user,
+          memberships: session.memberships,
           membershipAccess: session.access,
           pendingRequest: session.pendingRequest,
         ),
@@ -145,6 +58,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
             status: AuthStatus.failure,
             message: error.message,
             user: state.user,
+            memberships: state.memberships,
             membershipAccess: state.membershipAccess,
             pendingRequest: state.pendingRequest,
           ),
@@ -168,6 +82,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         AuthState(
           status: AuthStatus.authenticated,
           user: session.user,
+          memberships: session.memberships,
           membershipAccess: session.access,
           pendingRequest: session.pendingRequest,
         ),

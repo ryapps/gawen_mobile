@@ -7,10 +7,45 @@ import 'package:frontend/core/router/route_names.dart';
 import 'package:frontend/core/theme/app_theme.dart';
 import 'package:frontend/modules/auth/presentation/bloc/auth_bloc.dart';
 import 'package:frontend/modules/auth/data/auth_repository.dart';
+import 'package:frontend/modules/auth/domain/entities/user_entity.dart';
+import 'package:frontend/modules/employees/domain/entities/membership_entity.dart';
+import 'package:frontend/modules/organization/domain/entities/organization_entity.dart';
 import 'package:frontend/modules/auth/presentation/pages/login_page.dart';
 import 'package:frontend/modules/auth/presentation/pages/onboarding/onboarding_page.dart';
 import 'package:frontend/modules/auth/presentation/pages/welcome_page.dart';
 import 'package:frontend/modules/auth/presentation/validators/password_validator.dart';
+
+const _employeeUser = UserEntity(
+  id: 'employee',
+  name: 'Employee',
+  email: 'employee@example.com',
+);
+
+const _ownerUser = UserEntity(
+  id: 'owner',
+  name: 'Owner',
+  email: 'owner@example.com',
+);
+
+const _employeeMembership = MembershipEntity(
+  id: 'membership-employee',
+  role: MembershipRole.employee,
+  organization: OrganizationEntity(
+    id: 'organization',
+    name: 'Gawen',
+    timezone: 'Asia/Jakarta',
+  ),
+);
+
+const _ownerMembership = MembershipEntity(
+  id: 'membership-owner',
+  role: MembershipRole.owner,
+  organization: OrganizationEntity(
+    id: 'organization',
+    name: 'Gawen',
+    timezone: 'Asia/Jakarta',
+  ),
+);
 
 void main() {
   testWidgets('welcome page shows the authentication entry actions', (
@@ -114,7 +149,7 @@ void main() {
         location: AppRoutes.home,
         auth: const AuthState(
           status: AuthStatus.authenticated,
-          user: {'id': 'user'},
+          user: _employeeUser,
           membershipAccess: MembershipAccess.pending,
         ),
       ),
@@ -125,7 +160,7 @@ void main() {
         location: AppRoutes.pending,
         auth: const AuthState(
           status: AuthStatus.authenticated,
-          user: {'id': 'user'},
+          user: _employeeUser,
           membershipAccess: MembershipAccess.pending,
         ),
       ),
@@ -136,7 +171,8 @@ void main() {
         location: AppRoutes.pending,
         auth: const AuthState(
           status: AuthStatus.authenticated,
-          user: {'id': 'user'},
+          user: _employeeUser,
+          memberships: [_employeeMembership],
           membershipAccess: MembershipAccess.active,
         ),
       ),
@@ -147,7 +183,7 @@ void main() {
         location: AppRoutes.login,
         auth: const AuthState(
           status: AuthStatus.authenticated,
-          user: {'id': 'employee'},
+          user: _employeeUser,
           membershipAccess: MembershipAccess.none,
         ),
       ),
@@ -158,7 +194,7 @@ void main() {
         location: AppRoutes.login,
         auth: const AuthState(
           status: AuthStatus.authenticated,
-          user: {'id': 'user'},
+          user: _employeeUser,
           membershipAccess: MembershipAccess.pending,
         ),
         returnTo: AppRoutes.home,
@@ -167,10 +203,33 @@ void main() {
     );
     expect(
       resolveAuthRedirect(
+        location: AppRoutes.employees,
+        auth: const AuthState(
+          status: AuthStatus.authenticated,
+          user: _employeeUser,
+          membershipAccess: MembershipAccess.active,
+        ),
+      ),
+      AppRoutes.permission,
+    );
+    expect(
+      resolveAuthRedirect(
+        location: AppRoutes.employees,
+        auth: const AuthState(
+          status: AuthStatus.authenticated,
+          user: _ownerUser,
+          memberships: [_ownerMembership],
+          membershipAccess: MembershipAccess.active,
+        ),
+      ),
+      isNull,
+    );
+    expect(
+      resolveAuthRedirect(
         location: AppRoutes.home,
         auth: const AuthState(
           status: AuthStatus.authenticated,
-          user: {'id': 'user'},
+          user: _employeeUser,
           membershipAccess: MembershipAccess.active,
         ),
       ),
@@ -181,7 +240,7 @@ void main() {
         location: AppRoutes.welcome,
         auth: const AuthState(
           status: AuthStatus.authenticated,
-          user: {'id': 'user'},
+          user: _employeeUser,
         ),
       ),
       AppRoutes.join,

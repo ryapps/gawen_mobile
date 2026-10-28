@@ -9,10 +9,18 @@ import 'package:go_router/go_router.dart';
 import '../../modules/auth/presentation/bloc/auth_bloc.dart';
 import '../../modules/home/pages/home_page.dart';
 import '../../modules/auth/presentation/pages/login_page.dart';
+import '../../modules/auth/presentation/pages/login_mode.dart';
 import '../../modules/auth/presentation/pages/onboarding/onboarding_page.dart';
 import '../../modules/auth/presentation/pages/registration_page.dart';
 import '../../modules/auth/presentation/pages/onboarding/splash_page.dart';
 import '../../modules/auth/presentation/pages/welcome_page.dart';
+import '../../modules/employees/presentation/pages/employees_page.dart';
+import '../../modules/home/pages/more_page.dart';
+import '../../modules/home/pages/pending_approval_page.dart';
+import '../../modules/home/pages/permission_page.dart';
+import '../../modules/home/pages/schedule_page.dart';
+import '../../modules/organization/presentation/pages/edit_organization_page.dart';
+import '../../modules/organization/presentation/pages/organization_page.dart';
 import 'route_names.dart';
 
 class AuthRouterRefresh extends ChangeNotifier {
@@ -49,6 +57,12 @@ String? resolveAuthRedirect({
     AppRoutes.ownerRegistration,
     AppRoutes.employeeRegistration,
     AppRoutes.invitation,
+  };
+  const ownerOnlyPaths = {
+    AppRoutes.employees,
+    AppRoutes.employeeDetail,
+    AppRoutes.inviteEmployee,
+    AppRoutes.editOrganization,
   };
   final hasVerifiedSession = auth.hasVerifiedSession;
   final isRestoring =
@@ -90,6 +104,30 @@ String? resolveAuthRedirect({
       MembershipAccess.pending => AppRoutes.pending,
       MembershipAccess.none => AppRoutes.join,
     };
+  }
+
+  if (ownerOnlyPaths.contains(location) && !auth.isOwner) {
+    return AppRoutes.permission;
+  }
+
+  if (location == AppRoutes.team && auth.isOwner) {
+    return AppRoutes.permission;
+  }
+
+  const activeAccessPaths = {
+    AppRoutes.organization,
+    AppRoutes.editOrganization,
+    AppRoutes.employees,
+    AppRoutes.employeeDetail,
+    AppRoutes.inviteEmployee,
+    AppRoutes.schedule,
+    AppRoutes.more,
+    AppRoutes.team,
+    AppRoutes.permission,
+  };
+  if (activeAccessPaths.contains(location) &&
+      auth.membershipAccess != MembershipAccess.active) {
+    return _landingPath(auth.membershipAccess);
   }
 
   if (location == AppRoutes.join || location == AppRoutes.requests) {
@@ -149,6 +187,9 @@ GoRouter createAppRouter(AuthBloc authBloc, AuthRouterRefresh refresh) =>
                   : extra is String
                   ? extra
                   : null,
+              initialMode: extra == LoginMode.owner
+                  ? LoginMode.owner
+                  : LoginMode.employee,
             );
           },
         ),
@@ -198,6 +239,53 @@ GoRouter createAppRouter(AuthBloc authBloc, AuthRouterRefresh refresh) =>
           builder: (context, state) => AcceptInvitationPage(
             initialToken: state.extra is String ? state.extra as String : null,
           ),
+        ),
+        GoRoute(
+          path: AppRoutes.employees,
+          name: 'employees',
+          builder: (context, state) => const EmployeesPage(),
+        ),
+        GoRoute(
+          path: AppRoutes.employeeDetail,
+          name: 'employee-detail',
+          builder: (context, state) => EmployeeDetailPage(
+            membershipId: state.extra is String ? state.extra! as String : '',
+          ),
+        ),
+        GoRoute(
+          path: AppRoutes.inviteEmployee,
+          name: 'invite-employee',
+          builder: (context, state) => const InviteEmployeePage(),
+        ),
+        GoRoute(
+          path: AppRoutes.organization,
+          name: 'organization',
+          builder: (context, state) => const OrganizationPage(),
+        ),
+        GoRoute(
+          path: AppRoutes.editOrganization,
+          name: 'edit-organization',
+          builder: (context, state) => const EditOrganizationPage(),
+        ),
+        GoRoute(
+          path: AppRoutes.schedule,
+          name: 'schedule',
+          builder: (context, state) => const SchedulePage(),
+        ),
+        GoRoute(
+          path: AppRoutes.more,
+          name: 'more',
+          builder: (context, state) => const MorePage(),
+        ),
+        GoRoute(
+          path: AppRoutes.team,
+          name: 'team',
+          builder: (context, state) => const PermissionPage(),
+        ),
+        GoRoute(
+          path: AppRoutes.permission,
+          name: 'permission',
+          builder: (context, state) => const PermissionPage(),
         ),
       ],
       errorBuilder: (context, state) => RouteNotFoundPage(
