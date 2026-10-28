@@ -16,8 +16,6 @@ class MorePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthBloc>().state;
-    final organizationName =
-        auth.activeMembership?.organization?.name ?? 'Informasi tempat kerja';
     return Scaffold(
       appBar: CustomAppBar(
         title: 'Lainnya',
@@ -114,6 +112,19 @@ class MorePage extends StatelessWidget {
             subtitle: 'Lihat detail perusahaan',
             onTap: () => context.push(AppRoutes.organization),
           ),
+
+          if (auth.isOwner) ...[
+            const SizedBox(height: 12),
+            MoreMenu(
+              title: 'Pengaturan Perusahaan',
+              icon: Icon(
+                CupertinoIcons.building_2_fill,
+                color: GawenColors.primary,
+              ),
+              subtitle: 'Ubah informasi dan profil usaha',
+              onTap: () => context.push(AppRoutes.editOrganization),
+            ),
+          ],
 
           const SizedBox(height: 20),
 

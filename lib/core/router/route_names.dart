@@ -14,6 +14,7 @@ abstract final class AppRoutes {
   static const employeeDetail = '/employees/detail';
   static const inviteEmployee = '/employees/invite';
   static const organization = '/organization';
+  static const organizationSetup = '/organization/setup';
   static const editOrganization = '/organization/edit';
   static const schedule = '/schedule';
   static const more = '/more';

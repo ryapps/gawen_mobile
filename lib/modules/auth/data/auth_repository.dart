@@ -44,6 +44,23 @@ class AuthRepository {
         await ApiClient.saveToken(data['accessToken'] as String);
       });
 
+  Future<UserEntity> updateProfile({
+    required String name,
+    required String phone,
+    required String? photoProfile,
+  }) => executeApiRequest(() async {
+    final response = await _client.patch<Map<String, dynamic>>(
+      '/api/users/me',
+      data: {'name': name.trim(), 'phone': phone, 'photoProfile': photoProfile},
+    );
+    final data = response.data?['data'];
+    if (data is! Map<String, dynamic> ||
+        data['user'] is! Map<String, dynamic>) {
+      throw const ApiFailure('Respons perubahan profil tidak valid.');
+    }
+    return UserModel.fromJson(data['user'] as Map<String, dynamic>);
+  });
+
   Future<void> registerOwner({
     required String name,
     required String organizationName,
@@ -83,7 +100,7 @@ class AuthRepository {
     return executeApiRequest(() async {
       try {
         final response = await _client.get<Map<String, dynamic>>(
-          '/api/auth/me',
+          '/api/users/me',
         );
         final data = response.data?['data'];
         if (data is! Map<String, dynamic> ||

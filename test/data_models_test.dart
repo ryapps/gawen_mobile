@@ -22,14 +22,21 @@ void main() {
         'id': 'organization-1',
         'name': 'Warung Ayu',
         'timezone': 'Asia/Jakarta',
+        'businessType': 'Cafe',
+        'setupCompletedAt': '2026-10-28T14:00:00.000Z',
       },
     });
 
     expect(user.phone, isNull);
     expect(membership.role, MembershipRole.owner);
     expect(membership.organization?.name, 'Warung Ayu');
+    expect(membership.organization?.businessType, 'Cafe');
     expect(membership.toJson()['role'], 'OWNER');
     expect(membership.toJson()['organization']['timezone'], 'Asia/Jakarta');
+    expect(
+      membership.toJson()['organization']['setupCompletedAt'],
+      '2026-10-28T14:00:00.000Z',
+    );
     final serialized = user.toJson();
     expect(serialized['email'], 'ayu@example.com');
     expect(serialized.containsKey('password'), isFalse);
@@ -41,14 +48,18 @@ void main() {
       'id': 'organization-1',
       'name': 'Warung Ayu',
       'timezone': 'Asia/Jakarta',
+      'businessType': 'Cafe',
+      'setupCompletedAt': '2026-10-28T14:00:00.000Z',
       'memberCount': 3,
       'createdAt': '2026-10-01T10:00:00.000Z',
       'updatedAt': '2026-10-02T10:00:00.000Z',
     });
 
     expect(model.memberCount, 3);
+    expect(model.isSetupComplete, isTrue);
     expect(model.createdAt, DateTime.utc(2026, 10, 1, 10));
     expect(model.toJson()['memberCount'], 3);
+    expect(model.toJson()['businessType'], 'Cafe');
     expect(
       OrganizationModel.fromJson({
         'id': 'organization-2',

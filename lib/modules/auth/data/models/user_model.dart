@@ -6,6 +6,7 @@ class UserModel extends UserEntity {
     required super.name,
     required super.email,
     super.phone,
+    super.photoProfile,
     super.createdAt,
     super.updatedAt,
   });
@@ -15,10 +16,12 @@ class UserModel extends UserEntity {
     final name = json['name'];
     final email = json['email'];
     final phone = json['phone'];
+    final photoProfile = json['photoProfile'];
     if (id is! String ||
         name is! String ||
         email is! String ||
-        (phone != null && phone is! String)) {
+        (phone != null && phone is! String) ||
+        (photoProfile != null && photoProfile is! String)) {
       throw const FormatException('Data profil pengguna tidak valid.');
     }
     return UserModel(
@@ -26,6 +29,7 @@ class UserModel extends UserEntity {
       name: name,
       email: email,
       phone: phone as String?,
+      photoProfile: photoProfile as String?,
       createdAt: _date(json['createdAt']),
       updatedAt: _date(json['updatedAt']),
     );
@@ -36,6 +40,7 @@ class UserModel extends UserEntity {
     'name': name,
     'email': email,
     'phone': phone,
+    'photoProfile': photoProfile,
     if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
     if (updatedAt != null) 'updatedAt': updatedAt!.toIso8601String(),
   };

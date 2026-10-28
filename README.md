@@ -43,7 +43,7 @@ keep their BLoC, event, and state in separate files under
 
 | Domain | Entity / API model | Backend source or route |
 | --- | --- | --- |
-| User profile | `UserEntity` / `UserModel` | `User` fields selected by `/api/auth/me` and employee member endpoints: `id`, `name`, `email`, nullable `phone`; password/hash are excluded. |
+| User profile | `UserEntity` / `UserModel` | `User` fields selected by `/api/users/me` and employee member endpoints: `id`, `name`, `email`, nullable `phone` and `photoProfile`; password/hash are excluded. |
 | Organization | `OrganizationEntity` / `OrganizationModel` | Organization API selection: `id`, `name`, `timezone`, `createdAt`, `updatedAt`, and `memberCount` on detail response. Optional values remain nullable when absent. |
 | Membership | `MembershipEntity` / `MembershipModel` | `OrganizationMembership`: `id`, `role`, optional nested user/organization and `createdAt`. Roles are `OWNER` and `EMPLOYEE`; the backend membership model has no status field. |
 | Join request | `JoinRequestEntity` / `JoinRequestModel` | `EmployeeJoinRequest`: `id`, status, dates, and permitted nested user/organization fields. Statuses are `PENDING`, `APPROVED`, and `REJECTED`. The Owner pending-only endpoint omits `status`, so that field stays nullable instead of being inferred. |
@@ -74,7 +74,8 @@ The backend routes below are verified in `../backend/src`.
 | POST | `/api/auth/register` | `name`, `organizationName`, `email`, `password`; 202 generic response. Creates owner, organization, and owner membership in a transaction. |
 | POST | `/api/auth/register/employee` | `name`, `email`, `password`; 202 generic response. Creates an account without membership or automatic login. |
 | POST | `/api/auth/login` | `email`, `password`; 200 Bearer token and user/membership data. |
-| GET | `/api/auth/me` | Authenticated profile and memberships. |
+| GET | `/api/users/me` | Authenticated profile and memberships. |
+| PATCH | `/api/users/me` | Updates the authenticated user's `name`, `phone`, and/or `photoProfile`; email and password are not editable here. |
 | POST | `/api/auth/logout` | Revokes the current authenticated session. |
 | GET | `/api/organizations/:organizationId` | Authenticated OWNER/EMPLOYEE membership; returns organization name, timezone, and member count. |
 | PATCH | `/api/organizations/:organizationId` | OWNER only; updates `name` and/or `timezone`. |

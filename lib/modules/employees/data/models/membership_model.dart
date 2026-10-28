@@ -59,12 +59,26 @@ Map<String, dynamic> _userJson(UserEntity user) => {
   'name': user.name,
   'email': user.email,
   'phone': user.phone,
+  'photoProfile': user.photoProfile,
 };
 
 Map<String, dynamic> _organizationJson(OrganizationEntity organization) => {
   'id': organization.id,
   'name': organization.name,
   'timezone': organization.timezone,
+  'businessType': organization.businessType,
+  'description': organization.description,
+  'logoUrl': organization.logoUrl,
+  'email': organization.email,
+  'phone': organization.phone,
+  'website': organization.website,
+  'address': organization.address,
+  'city': organization.city,
+  'province': organization.province,
+  'postalCode': organization.postalCode,
+  'currency': organization.currency,
+  if (organization.setupCompletedAt != null)
+    'setupCompletedAt': organization.setupCompletedAt!.toIso8601String(),
   if (organization.memberCount != null) 'memberCount': organization.memberCount,
   if (organization.createdAt != null)
     'createdAt': organization.createdAt!.toIso8601String(),

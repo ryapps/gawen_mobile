@@ -37,13 +37,15 @@ const _employeeMembership = MembershipEntity(
   ),
 );
 
-const _ownerMembership = MembershipEntity(
+final _ownerMembership = MembershipEntity(
   id: 'membership-owner',
   role: MembershipRole.owner,
   organization: OrganizationEntity(
     id: 'organization',
     name: 'Gawen',
     timezone: 'Asia/Jakarta',
+    businessType: 'Cafe',
+    setupCompletedAt: DateTime.utc(2026, 10, 28),
   ),
 );
 
@@ -215,10 +217,54 @@ void main() {
     expect(
       resolveAuthRedirect(
         location: AppRoutes.employees,
-        auth: const AuthState(
+        auth: AuthState(
           status: AuthStatus.authenticated,
           user: _ownerUser,
           memberships: [_ownerMembership],
+          membershipAccess: MembershipAccess.active,
+        ),
+      ),
+      isNull,
+    );
+    expect(
+      resolveAuthRedirect(
+        location: AppRoutes.home,
+        auth: const AuthState(
+          status: AuthStatus.authenticated,
+          user: _ownerUser,
+          memberships: [
+            MembershipEntity(
+              id: 'membership-owner-incomplete',
+              role: MembershipRole.owner,
+              organization: OrganizationEntity(
+                id: 'organization-incomplete',
+                name: 'Gawen',
+                timezone: 'Asia/Jakarta',
+              ),
+            ),
+          ],
+          membershipAccess: MembershipAccess.active,
+        ),
+      ),
+      AppRoutes.organizationSetup,
+    );
+    expect(
+      resolveAuthRedirect(
+        location: AppRoutes.organizationSetup,
+        auth: const AuthState(
+          status: AuthStatus.authenticated,
+          user: _ownerUser,
+          memberships: [
+            MembershipEntity(
+              id: 'membership-owner-incomplete',
+              role: MembershipRole.owner,
+              organization: OrganizationEntity(
+                id: 'organization-incomplete',
+                name: 'Gawen',
+                timezone: 'Asia/Jakarta',
+              ),
+            ),
+          ],
           membershipAccess: MembershipAccess.active,
         ),
       ),

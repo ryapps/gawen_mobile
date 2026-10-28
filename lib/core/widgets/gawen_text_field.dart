@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/theme/app_theme.dart';
 
 class GawenTextField extends StatefulWidget {
   const GawenTextField({
@@ -13,6 +14,9 @@ class GawenTextField extends StatefulWidget {
     this.obscureText = false,
     this.textCapitalization = TextCapitalization.none,
     this.maxLength,
+    this.maxLines = 1,
+    this.indonesianPhone = false,
+    this.enabled = true,
   });
 
   final TextEditingController controller;
@@ -25,6 +29,9 @@ class GawenTextField extends StatefulWidget {
   final bool obscureText;
   final TextCapitalization textCapitalization;
   final int? maxLength;
+  final int maxLines;
+  final bool indonesianPhone;
+  final bool enabled;
 
   @override
   State<GawenTextField> createState() => _GawenTextFieldState();
@@ -54,9 +61,29 @@ class _GawenTextFieldState extends State<GawenTextField> {
           obscureText: _obscured,
           textCapitalization: widget.textCapitalization,
           maxLength: widget.maxLength,
+          maxLines: widget.maxLines,
+          enabled: widget.enabled,
           decoration: InputDecoration(
             hintText: widget.hint,
-            prefixIcon: Icon(widget.icon, size: 19),
+            hintStyle: const TextStyle(fontSize: 14, color: GawenColors.muted),
+            prefixIcon: widget.indonesianPhone
+                ? Padding(
+                    padding: const EdgeInsets.only(left: 14, right: 12),
+                    child: Center(
+                      widthFactor: 0,
+                      child: Text(
+                        '+62',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  )
+                : Icon(widget.icon, size: 19),
+            prefixIconConstraints: widget.indonesianPhone
+                ? const BoxConstraints(minWidth: 58)
+                : null,
             counterText: '',
             suffixIcon: widget.obscureText
                 ? IconButton(

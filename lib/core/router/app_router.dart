@@ -37,8 +37,10 @@ class AuthRouterRefresh extends ChangeNotifier {
   }
 }
 
-String _landingPath(MembershipAccess access) => switch (access) {
-  MembershipAccess.active => AppRoutes.home,
+String _landingPath(AuthState auth) => switch (auth.membershipAccess) {
+  MembershipAccess.active => auth.requiresOrganizationSetup
+      ? AppRoutes.organizationSetup
+      : AppRoutes.home,
   MembershipAccess.pending => AppRoutes.pending,
   MembershipAccess.none => AppRoutes.join,
 };
@@ -69,7 +71,7 @@ String? resolveAuthRedirect({
       auth.status == AuthStatus.initial || auth.status == AuthStatus.restoring;
 
   if (location == AppRoutes.splash) {
-    if (hasVerifiedSession) return _landingPath(auth.membershipAccess);
+    if (hasVerifiedSession) return _landingPath(auth);
     return null;
   }
 
@@ -88,10 +90,19 @@ String? resolveAuthRedirect({
   if (location == AppRoutes.pending) {
     return switch (auth.membershipAccess) {
       MembershipAccess.pending => null,
-      MembershipAccess.active => AppRoutes.home,
+      MembershipAccess.active => _landingPath(auth),
       MembershipAccess.none => AppRoutes.join,
     };
   }
+
+  if (location == AppRoutes.organizationSetup) {
+    if (auth.membershipAccess != MembershipAccess.active || !auth.isOwner) {
+      return _landingPath(auth);
+    }
+    return auth.requiresOrganizationSetup ? null : AppRoutes.home;
+  }
+
+  if (auth.requiresOrganizationSetup) return AppRoutes.organizationSetup;
 
   if (location == AppRoutes.requests &&
       auth.membershipAccess == MembershipAccess.pending) {
@@ -100,7 +111,9 @@ String? resolveAuthRedirect({
 
   if (location == AppRoutes.home) {
     return switch (auth.membershipAccess) {
-      MembershipAccess.active => null,
+      MembershipAccess.active => auth.requiresOrganizationSetup
+          ? AppRoutes.organizationSetup
+          : null,
       MembershipAccess.pending => AppRoutes.pending,
       MembershipAccess.none => AppRoutes.join,
     };
@@ -127,7 +140,7 @@ String? resolveAuthRedirect({
   };
   if (activeAccessPaths.contains(location) &&
       auth.membershipAccess != MembershipAccess.active) {
-    return _landingPath(auth.membershipAccess);
+    return _landingPath(auth);
   }
 
   if (location == AppRoutes.join || location == AppRoutes.requests) {
@@ -140,10 +153,10 @@ String? resolveAuthRedirect({
         return returnTo;
       }
       if (returnTo == AppRoutes.home || returnTo == AppRoutes.pending) {
-        return _landingPath(auth.membershipAccess);
+        return _landingPath(auth);
       }
     }
-    return _landingPath(auth.membershipAccess);
+    return _landingPath(auth);
   }
 
   return null;
@@ -263,6 +276,12 @@ GoRouter createAppRouter(AuthBloc authBloc, AuthRouterRefresh refresh) =>
           builder: (context, state) => const OrganizationPage(),
         ),
         GoRoute(
+          path: AppRoutes.organizationSetup,
+          name: 'organization-setup',
+          builder: (context, state) =>
+              const EditOrganizationPage(isSetup: true),
+        ),
+        GoRoute(
           path: AppRoutes.editOrganization,
           name: 'edit-organization',
           builder: (context, state) => const EditOrganizationPage(),
@@ -290,7 +309,7 @@ GoRouter createAppRouter(AuthBloc authBloc, AuthRouterRefresh refresh) =>
       ],
       errorBuilder: (context, state) => RouteNotFoundPage(
         onReturn: () => authBloc.state.hasVerifiedSession
-            ? _landingPath(authBloc.state.membershipAccess)
+            ? _landingPath(authBloc.state)
             : AppRoutes.welcome,
       ),
     );

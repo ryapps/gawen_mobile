@@ -50,6 +50,9 @@ class AuthState {
     return membership?.role == MembershipRole.owner;
   }
 
+  bool get requiresOrganizationSetup =>
+      isOwner && activeMembership?.organization?.isSetupComplete != true;
+
   String? get organizationId {
     final membership = activeMembership;
     return membership?.organization?.id ?? membership?.organizationId;

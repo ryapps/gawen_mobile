@@ -15,6 +15,8 @@ class OrganizationBloc extends Bloc<OrganizationEvent, OrganizationState> {
     });
     on<OrganizationLoadRequested>(_load);
     on<OrganizationUpdateRequested>(_update);
+    on<OrganizationSetupCompletionRequested>(_completeSetup);
+    on<OrganizationSetupStepSaveRequested>(_saveSetupStep);
   }
 
   final OrganizationRepository _repository;
@@ -55,6 +57,17 @@ class OrganizationBloc extends Bloc<OrganizationEvent, OrganizationState> {
       final organization = await _repository.updateOrganization(
         organizationId: event.organizationId,
         name: event.name,
+        businessType: event.businessType,
+        description: event.description,
+        logoUrl: event.logoUrl,
+        email: event.email,
+        phone: event.phone,
+        website: event.website,
+        address: event.address,
+        city: event.city,
+        province: event.province,
+        postalCode: event.postalCode,
+        currency: event.currency,
         timezone: event.timezone,
       );
       emit(
@@ -62,6 +75,60 @@ class OrganizationBloc extends Bloc<OrganizationEvent, OrganizationState> {
           status: OrganizationStatus.ready,
           organization: organization,
           message: 'Informasi usaha berhasil disimpan.',
+        ),
+      );
+    } on ApiFailure catch (error) {
+      emit(
+        state.copyWith(
+          status: OrganizationStatus.failure,
+          message: error.message,
+        ),
+      );
+    }
+  }
+
+  Future<void> _completeSetup(
+    OrganizationSetupCompletionRequested event,
+    Emitter<OrganizationState> emit,
+  ) async {
+    emit(state.copyWith(status: OrganizationStatus.saving, message: null));
+    try {
+      final organization = await _repository.completeSetup(
+        event.organizationId,
+      );
+      emit(
+        state.copyWith(
+          status: OrganizationStatus.ready,
+          organization: organization,
+          message: 'Informasi usaha berhasil disimpan.',
+        ),
+      );
+    } on ApiFailure catch (error) {
+      emit(
+        state.copyWith(
+          status: OrganizationStatus.failure,
+          message: error.message,
+        ),
+      );
+    }
+  }
+
+  Future<void> _saveSetupStep(
+    OrganizationSetupStepSaveRequested event,
+    Emitter<OrganizationState> emit,
+  ) async {
+    emit(state.copyWith(status: OrganizationStatus.saving, message: null));
+    try {
+      final organization = await _repository.saveSetupStep(
+        organizationId: event.organizationId,
+        step: event.step,
+        fields: event.fields,
+      );
+      emit(
+        state.copyWith(
+          status: OrganizationStatus.ready,
+          organization: organization,
+          message: 'Progres berhasil disimpan.',
         ),
       );
     } on ApiFailure catch (error) {
