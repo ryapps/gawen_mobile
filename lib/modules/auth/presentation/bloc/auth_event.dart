@@ -42,3 +42,9 @@ final class EmployeeRegistrationSubmitted extends AuthEvent {
 final class LogoutRequested extends AuthEvent {
   const LogoutRequested();
 }
+
+final class AvatarUploadRequested extends AuthEvent {
+  const AvatarUploadRequested(this.filePath);
+
+  final String filePath;
+}

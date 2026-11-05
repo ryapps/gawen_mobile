@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:image_cropper/image_cropper.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:frontend/modules/organization/presentation/validators/edit_organization_validator.dart';
 import 'package:go_router/go_router.dart';
 
@@ -42,6 +44,9 @@ class _EditOrganizationPageState extends State<EditOrganizationPage> {
   final _currency = TextEditingController(text: 'IDR');
   bool _loading = true;
   bool _saving = false;
+  bool _uploadingAvatar = false;
+  String? _selectedAvatarPath;
+  final _imagePicker = ImagePicker();
   String? _error;
   int _step = 0;
   String? _loadedId;
@@ -202,17 +207,6 @@ class _EditOrganizationPageState extends State<EditOrganizationPage> {
                         ),
                         if (_error != null) RequestError(message: _error!),
                         Form(key: _formKey, child: _activeStep()),
-                        if (_step == 1)
-                          _setupHelper(
-                            Icons.info_outline,
-                            'Informasi ini membantu tim mengenali tempat kerja mereka.',
-                          ),
-                        if (_step == 2)
-                          _setupHelper(
-                            Icons.shield_outlined,
-                            'Kontak hanya digunakan untuk kebutuhan operasional bisnis.',
-                          ),
-                        if (_step == 4) _identityNote(),
                       ],
                     ),
                   ),
@@ -396,12 +390,15 @@ class _EditOrganizationPageState extends State<EditOrganizationPage> {
         email: _profileEmail,
         phone: _profilePhone,
         photoProfile: _photoProfile,
+        selectedAvatarPath: _selectedAvatarPath,
+        isUploadingAvatar: _uploadingAvatar,
+        onPickAvatar: _pickAvatar,
+        onCancelAvatar: () => setState(() => _selectedAvatarPath = null),
         nameValidator: EditOrganizationValidator.requiredTextValidator(
           'Nama',
           max: 120,
         ),
         phoneValidator: EditOrganizationValidator.validatePhone,
-        urlValidator: EditOrganizationValidator.urlValidator('Foto profil'),
       ),
       1 => BusinessInformationStep(
         name: _name,
@@ -439,6 +436,62 @@ class _EditOrganizationPageState extends State<EditOrganizationPage> {
     };
   }
 
+  Future<void> _pickAvatar() async {
+    try {
+      final image = await _imagePicker.pickImage(source: ImageSource.gallery);
+      if (image == null || !mounted) return;
+      final extension = image.name.split('.').last.toLowerCase();
+      if (!{'jpg', 'jpeg', 'png', 'webp'}.contains(extension)) {
+        setState(() => _error = 'Pilih gambar JPEG, PNG, atau WebP.');
+        return;
+      }
+      final bytes = await image.length();
+      if (bytes > 5 * 1024 * 1024) {
+        setState(() => _error = 'Ukuran foto maksimal 5 MB.');
+        return;
+      }
+      final croppedImage = await ImageCropper().cropImage(
+        sourcePath: image.path,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        compressFormat: ImageCompressFormat.jpg,
+        compressQuality: 90,
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'Atur foto profil',
+            toolbarColor: GawenColors.primary,
+            toolbarWidgetColor: Colors.white,
+            cropStyle: CropStyle.circle,
+            initAspectRatio: CropAspectRatioPreset.square,
+            hideBottomControls: true,
+            lockAspectRatio: true,
+            aspectRatioPresets: [CropAspectRatioPreset.square],
+          ),
+          IOSUiSettings(
+            title: 'Atur foto profil',
+            doneButtonTitle: 'Simpan',
+            cancelButtonTitle: 'Batal',
+            cropStyle: CropStyle.circle,
+            aspectRatioLockEnabled: true,
+            aspectRatioPickerButtonHidden: true,
+            aspectRatioPresets: [CropAspectRatioPreset.square],
+          ),
+        ],
+      );
+      if (croppedImage == null || !mounted) return;
+      setState(() {
+        _error = null;
+        _selectedAvatarPath = croppedImage.path;
+      });
+    } catch (_) {
+      if (mounted) {
+        setState(
+          () => _error = 'Foto tidak dapat dibuka. Coba pilih gambar lain.',
+        );
+      }
+    }
+  }
+
   Future<void> _next() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() {
@@ -449,6 +502,22 @@ class _EditOrganizationPageState extends State<EditOrganizationPage> {
       final authBloc = context.read<AuthBloc>();
       final organizationBloc = context.read<OrganizationBloc>();
       if (_step == 0) {
+        if (_selectedAvatarPath != null) {
+          setState(() => _uploadingAvatar = true);
+          authBloc.add(AvatarUploadRequested(_selectedAvatarPath!));
+          final avatarState = await authBloc.stream.firstWhere(
+            (state) => state.status == AuthStatus.authenticated,
+          );
+          if (avatarState.message != null ||
+              avatarState.user?.photoProfile == null) {
+            throw StateError(
+              avatarState.message ?? 'Foto profil gagal diunggah.',
+            );
+          }
+          _photoProfile.text = avatarState.user!.photoProfile!;
+          _selectedAvatarPath = null;
+          setState(() => _uploadingAvatar = false);
+        }
         organizationBloc.add(
           OrganizationSetupStepSaveRequested(
             organizationId: authBloc.state.organizationId!,
@@ -457,9 +526,6 @@ class _EditOrganizationPageState extends State<EditOrganizationPage> {
               'name': _profileName.text.trim(),
               'phone':
                   '+62${EditOrganizationValidator.digitsOnly(_profilePhone.text)}',
-              'photoProfile': EditOrganizationValidator.nullable(
-                _photoProfile.text,
-              ),
             },
           ),
         );
@@ -494,6 +560,7 @@ class _EditOrganizationPageState extends State<EditOrganizationPage> {
             completed.message ?? 'Setup belum dapat diselesaikan.',
           );
         }
+        _uploadingAvatar = false;
         if (!mounted) return;
         authBloc.add(const SessionRestoreRequested());
         context.go(AppRoutes.home);

@@ -15,6 +15,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<OwnerRegistrationSubmitted>(_registerOwner);
     on<EmployeeRegistrationSubmitted>(_registerEmployee);
     on<LogoutRequested>(_logout);
+    on<AvatarUploadRequested>(_uploadAvatar);
   }
 
   final AuthRepository _repository;
@@ -149,6 +150,32 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     } on ApiFailure catch (error) {
       emit(
         AuthState(status: AuthStatus.unauthenticated, message: error.message),
+      );
+    }
+  }
+
+  Future<void> _uploadAvatar(
+    AvatarUploadRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    final previous = state;
+    if (state.status == AuthStatus.loading || state.user == null) return;
+    emit(state.copyWith(status: AuthStatus.loading, clearMessage: true));
+    try {
+      final user = await _repository.uploadAvatar(event.filePath);
+      emit(
+        previous.copyWith(
+          status: AuthStatus.authenticated,
+          user: user,
+          clearMessage: true,
+        ),
+      );
+    } on ApiFailure catch (error) {
+      emit(
+        previous.copyWith(
+          status: AuthStatus.authenticated,
+          message: error.message,
+        ),
       );
     }
   }

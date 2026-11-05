@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'dart:io';
 
 import '../../../../core/widgets/gawen_text_field.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -114,7 +115,7 @@ class OrganizationSetupProgress extends StatelessWidget {
               }),
             ),
 
-            SizedBox(height:20),
+            SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -154,7 +155,7 @@ class OrganizationSetupHeader extends StatelessWidget {
     child: Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-          const Expanded(
+        const Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -163,17 +164,14 @@ class OrganizationSetupHeader extends StatelessWidget {
                 'Lengkapi Profil Bisnis',
                 style: TextStyle(
                   color: GawenColors.text,
-                  fontSize: 18,             
+                  fontSize: 18,
                   fontWeight: FontWeight.w900,
                 ),
               ),
               SizedBox(height: 5),
               Text(
                 'Isi informasi bisnis untuk mulai menggunakan Gawen.',
-                style: TextStyle(
-                  color: GawenColors.muted,
-                  fontSize: 11,
-                ),
+                style: TextStyle(color: GawenColors.muted, fontSize: 11),
               ),
             ],
           ),
@@ -289,8 +287,11 @@ class PersonalProfileStep extends StatelessWidget {
     required this.email,
     required this.phone,
     required this.photoProfile,
+    required this.onPickAvatar,
+    required this.onCancelAvatar,
+    required this.selectedAvatarPath,
+    required this.isUploadingAvatar,
     required this.phoneValidator,
-    required this.urlValidator,
     required this.nameValidator,
     super.key,
   });
@@ -299,13 +300,62 @@ class PersonalProfileStep extends StatelessWidget {
   final TextEditingController email;
   final TextEditingController phone;
   final TextEditingController photoProfile;
+  final VoidCallback onPickAvatar;
+  final VoidCallback onCancelAvatar;
+  final String? selectedAvatarPath;
+  final bool isUploadingAvatar;
   final String? Function(String?) phoneValidator;
-  final String? Function(String?) urlValidator;
   final String? Function(String?) nameValidator;
 
   @override
   Widget build(BuildContext context) => Column(
     children: [
+     Material(
+  color: Colors.transparent,
+  shape: const CircleBorder(),
+  child: InkWell(
+    onTap: isUploadingAvatar ? null : onPickAvatar,
+    customBorder: const CircleBorder(),
+    child: Stack(
+      alignment: Alignment.bottomRight,
+      children: [
+        CircleAvatar(
+          radius: 39,
+          backgroundColor: GawenColors.primarySoft,
+          backgroundImage: selectedAvatarPath != null
+              ? FileImage(File(selectedAvatarPath!))
+              : photoProfile.text.isNotEmpty
+                  ? NetworkImage(photoProfile.text)
+                  : null,
+          child: selectedAvatarPath == null && photoProfile.text.isEmpty
+              ? const Icon(
+                  Icons.person_outline,
+                  size: 38,
+                  color: GawenColors.primary,
+                )
+              : null,
+        ),
+        Container(
+          width: 27,
+          height: 27,
+          decoration: BoxDecoration(
+            color: GawenColors.primary,
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: Colors.white,
+              width: 2,
+            ),
+          ),
+          child: const Icon(
+            Icons.camera_alt_outlined,
+            size: 15,
+            color: Colors.white,
+          ),
+        ),
+      ],
+    ),
+  ),
+),
       GawenTextField(
         controller: name,
         label: 'Nama lengkap *',
@@ -330,13 +380,9 @@ class PersonalProfileStep extends StatelessWidget {
         indonesianPhone: true,
         validator: phoneValidator,
       ),
-      GawenTextField(
-        controller: photoProfile,
-        label: 'Foto profil (URL)',
-        hint: 'https://...',
-        icon: Icons.image_outlined,
-        validator: urlValidator,
-      ),
+      const SizedBox(height: 22),
+     
+      
     ],
   );
 }

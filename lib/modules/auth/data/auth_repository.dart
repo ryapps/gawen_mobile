@@ -61,6 +61,32 @@ class AuthRepository {
     return UserModel.fromJson(data['user'] as Map<String, dynamic>);
   });
 
+  Future<UserEntity> uploadAvatar(String filePath) =>
+      executeApiRequest(() async {
+        final extension = filePath.split('.').last.toLowerCase();
+        final subType = switch (extension) {
+          'jpg' || 'jpeg' => 'jpeg',
+          'png' => 'png',
+          'webp' => 'webp',
+          _ => throw const ApiFailure('Pilih gambar JPEG, PNG, atau WebP.'),
+        };
+        final response = await _client.post<Map<String, dynamic>>(
+          '/api/users/profile/avatar',
+          data: FormData.fromMap({
+            'avatar': await MultipartFile.fromFile(
+              filePath,
+              contentType: DioMediaType('image', subType),
+            ),
+          }),
+        );
+        final data = response.data?['data'];
+        if (data is! Map<String, dynamic> ||
+            data['user'] is! Map<String, dynamic>) {
+          throw const ApiFailure('Respons upload foto profil tidak valid.');
+        }
+        return UserModel.fromJson(data['user'] as Map<String, dynamic>);
+      });
+
   Future<void> registerOwner({
     required String name,
     required String organizationName,
