@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/router/route_names.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/gawen_image.dart';
 import '../../auth/presentation/bloc/auth_bloc.dart';
 import '../widgets/main_navigation.dart';
 
@@ -44,7 +45,14 @@ class MorePage extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Image.asset('assets/icons/avatar.png', width: 50, height: 50),
+                ClipOval(
+                  child: GawenImage(
+                    source: auth.user?.photoProfile,
+                    width: 50,
+                    height: 50,
+                    fit: BoxFit.cover,
+                  ),
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -84,7 +92,7 @@ class MorePage extends StatelessWidget {
                     padding: const EdgeInsets.all(10),
                     shape: CircleBorder(eccentricity: 0.5),
                   ),
-                  onPressed: () => {},
+                  onPressed: () => context.push(AppRoutes.editProfile),
                 ),
               ],
             ),
@@ -99,26 +107,14 @@ class MorePage extends StatelessWidget {
             onTap: () => {},
           ),
 
-          const SizedBox(height: 20),
-
-          MoreMenu(
-            title: 'Informasi Perusahaan',
-            icon: Image.asset(
-              'assets/icons/building.png',
-              width: 24,
-              height: 24,
-              color: GawenColors.primary,
-            ),
-            subtitle: 'Lihat detail perusahaan',
-            onTap: () => context.push(AppRoutes.organization),
-          ),
-
           if (auth.isOwner) ...[
             const SizedBox(height: 12),
             MoreMenu(
               title: 'Pengaturan Perusahaan',
-              icon: Icon(
-                CupertinoIcons.building_2_fill,
+              icon: Image.asset(
+                'assets/icons/building.png',
+                width: 24,
+                height: 24,
                 color: GawenColors.primary,
               ),
               subtitle: 'Ubah informasi dan profil usaha',

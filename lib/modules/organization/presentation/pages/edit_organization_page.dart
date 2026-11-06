@@ -11,8 +11,11 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/gawen_widgets.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../domain/entities/organization_entity.dart';
+import '../../domain/entities/organization_business_type.dart';
 import '../bloc/organization_bloc.dart';
 import '../widgets/organization_setup_steps.dart';
+import '../../../regions/domain/entities/administrative_region.dart';
+import '../../../regions/presentation/bloc/region_bloc.dart';
 
 class EditOrganizationPage extends StatefulWidget {
   const EditOrganizationPage({super.key, this.isSetup = false});
@@ -30,14 +33,12 @@ class _EditOrganizationPageState extends State<EditOrganizationPage> {
   final _profilePhone = TextEditingController();
   final _photoProfile = TextEditingController();
   final _name = TextEditingController();
-  final _businessType = TextEditingController();
+  OrganizationBusinessType? _businessType;
   final _description = TextEditingController();
   final _phone = TextEditingController();
   final _email = TextEditingController();
   final _website = TextEditingController();
   final _address = TextEditingController();
-  final _city = TextEditingController();
-  final _province = TextEditingController();
   final _postalCode = TextEditingController();
   final _logo = TextEditingController();
   final _timezone = TextEditingController(text: 'Asia/Jakarta');
@@ -45,7 +46,16 @@ class _EditOrganizationPageState extends State<EditOrganizationPage> {
   bool _loading = true;
   bool _saving = false;
   bool _uploadingAvatar = false;
+  bool _uploadingLogo = false;
   String? _selectedAvatarPath;
+  String? _selectedLogoPath;
+  AdministrativeRegion? _selectedProvince;
+  AdministrativeRegion? _selectedRegency;
+  AdministrativeRegion? _selectedDistrict;
+  AdministrativeRegion? _selectedVillage;
+  String? _legacyProvinceName;
+  String? _legacyRegencyName;
+  bool _regionWasEdited = false;
   final _imagePicker = ImagePicker();
   String? _error;
   int _step = 0;
@@ -109,6 +119,7 @@ class _EditOrganizationPageState extends State<EditOrganizationPage> {
       _profilePhone.text = EditOrganizationValidator.digitsOnly(profile?.phone);
       _photoProfile.text = profile?.photoProfile ?? '';
       _setOrganization(org);
+      _loadRegionOptions();
       if (widget.isSetup) _resume(org);
       setState(() {
         _loadedId = id;
@@ -125,14 +136,19 @@ class _EditOrganizationPageState extends State<EditOrganizationPage> {
 
   void _setOrganization(OrganizationEntity org) {
     _name.text = org.name;
-    _businessType.text = org.businessType ?? '';
+    _businessType = org.businessType;
     _description.text = org.description ?? '';
     _phone.text = EditOrganizationValidator.digitsOnly(org.phone);
     _email.text = org.email ?? '';
     _website.text = org.website ?? '';
     _address.text = org.address ?? '';
-    _city.text = org.city ?? '';
-    _province.text = org.province ?? '';
+    _selectedProvince = org.provinceRegion;
+    _selectedRegency = org.regencyRegion;
+    _selectedDistrict = org.districtRegion;
+    _selectedVillage = org.villageRegion;
+    _legacyProvinceName = org.provinceName ?? org.province;
+    _legacyRegencyName = org.regencyName ?? org.city;
+    _regionWasEdited = false;
     _postalCode.text = org.postalCode ?? '';
     _logo.text = org.logoUrl ?? '';
     _timezone.text = org.timezone;
@@ -150,14 +166,11 @@ class _EditOrganizationPageState extends State<EditOrganizationPage> {
       _profilePhone,
       _photoProfile,
       _name,
-      _businessType,
       _description,
       _phone,
       _email,
       _website,
       _address,
-      _city,
-      _province,
       _postalCode,
       _logo,
       _timezone,
@@ -325,17 +338,15 @@ class _EditOrganizationPageState extends State<EditOrganizationPage> {
           BusinessInformationStep(
             name: _name,
             businessType: _businessType,
+            onBusinessTypeChanged: (value) =>
+                setState(() => _businessType = value),
             description: _description,
             nameValidator: EditOrganizationValidator.requiredTextValidator(
               'Nama usaha',
               min: 2,
               max: 120,
             ),
-            businessTypeValidator:
-                EditOrganizationValidator.requiredTextValidator(
-                  'Jenis usaha',
-                  max: 80,
-                ),
+            businessTypeValidator: _validateBusinessType,
           ),
           BusinessContactStep(
             phone: _phone,
@@ -347,14 +358,25 @@ class _EditOrganizationPageState extends State<EditOrganizationPage> {
           ),
           BusinessAddressStep(
             address: _address,
-            city: _city,
-            province: _province,
+            province: _selectedProvince,
+            regency: _selectedRegency,
+            district: _selectedDistrict,
+            village: _selectedVillage,
+            legacyProvinceName: _regionWasEdited ? null : _legacyProvinceName,
+            legacyRegencyName: _regionWasEdited ? null : _legacyRegencyName,
+            onProvinceChanged: _onProvinceChanged,
+            onRegencyChanged: _onRegencyChanged,
+            onDistrictChanged: _onDistrictChanged,
+            onVillageChanged: _onVillageChanged,
             postalCode: _postalCode,
             validator: EditOrganizationValidator.maxLengthValidator,
           ),
           BusinessIdentityStep(
             logo: _logo,
-            logoValidator: EditOrganizationValidator.urlValidator('Logo'),
+            selectedLogoPath: _selectedLogoPath,
+            isUploadingLogo: _uploadingLogo,
+            onPickLogo: _pickLogo,
+            onRemoveLogo: _removeLogo,
           ),
           GawenTextField(
             controller: _timezone,
@@ -403,16 +425,14 @@ class _EditOrganizationPageState extends State<EditOrganizationPage> {
       1 => BusinessInformationStep(
         name: _name,
         businessType: _businessType,
+        onBusinessTypeChanged: (value) => setState(() => _businessType = value),
         description: _description,
         nameValidator: EditOrganizationValidator.requiredTextValidator(
           'Nama usaha',
           min: 2,
           max: 120,
         ),
-        businessTypeValidator: EditOrganizationValidator.requiredTextValidator(
-          'Jenis usaha',
-          max: 80,
-        ),
+        businessTypeValidator: _validateBusinessType,
       ),
       2 => BusinessContactStep(
         phone: _phone,
@@ -424,16 +444,90 @@ class _EditOrganizationPageState extends State<EditOrganizationPage> {
       ),
       3 => BusinessAddressStep(
         address: _address,
-        city: _city,
-        province: _province,
+        province: _selectedProvince,
+        regency: _selectedRegency,
+        district: _selectedDistrict,
+        village: _selectedVillage,
+        legacyProvinceName: _regionWasEdited ? null : _legacyProvinceName,
+        legacyRegencyName: _regionWasEdited ? null : _legacyRegencyName,
+        onProvinceChanged: _onProvinceChanged,
+        onRegencyChanged: _onRegencyChanged,
+        onDistrictChanged: _onDistrictChanged,
+        onVillageChanged: _onVillageChanged,
         postalCode: _postalCode,
         validator: EditOrganizationValidator.maxLengthValidator,
       ),
       _ => BusinessIdentityStep(
         logo: _logo,
-        logoValidator: EditOrganizationValidator.urlValidator('Logo'),
+        selectedLogoPath: _selectedLogoPath,
+        isUploadingLogo: _uploadingLogo,
+        onPickLogo: _pickLogo,
+        onRemoveLogo: _removeLogo,
       ),
     };
+  }
+
+  String? _validateBusinessType(OrganizationBusinessType? value) =>
+      value == null ? 'Jenis usaha wajib dipilih.' : null;
+
+  void _loadRegionOptions() {
+    final regionBloc = context.read<RegionBloc>();
+    regionBloc.add(const ProvincesRequested());
+    final province = _selectedProvince;
+    final regency = _selectedRegency;
+    final district = _selectedDistrict;
+    if (province != null) {
+      regionBloc.add(RegenciesRequested(province.id));
+    }
+    if (regency != null) {
+      regionBloc.add(DistrictsRequested(regency.id));
+    }
+    if (district != null) {
+      regionBloc.add(VillagesRequested(district.id));
+    }
+  }
+
+  void _onProvinceChanged(AdministrativeRegion? region) {
+    setState(() {
+      _regionWasEdited = true;
+      _selectedProvince = region;
+      _selectedRegency = null;
+      _selectedDistrict = null;
+      _selectedVillage = null;
+    });
+    if (region != null) {
+      context.read<RegionBloc>().add(RegenciesRequested(region.id));
+    }
+  }
+
+  void _onRegencyChanged(AdministrativeRegion? region) {
+    setState(() {
+      _regionWasEdited = true;
+      _selectedRegency = region;
+      _selectedDistrict = null;
+      _selectedVillage = null;
+    });
+    if (region != null) {
+      context.read<RegionBloc>().add(DistrictsRequested(region.id));
+    }
+  }
+
+  void _onDistrictChanged(AdministrativeRegion? region) {
+    setState(() {
+      _regionWasEdited = true;
+      _selectedDistrict = region;
+      _selectedVillage = null;
+    });
+    if (region != null) {
+      context.read<RegionBloc>().add(VillagesRequested(region.id));
+    }
+  }
+
+  void _onVillageChanged(AdministrativeRegion? region) {
+    setState(() {
+      _regionWasEdited = true;
+      _selectedVillage = region;
+    });
   }
 
   Future<void> _pickAvatar() async {
@@ -490,6 +584,69 @@ class _EditOrganizationPageState extends State<EditOrganizationPage> {
         );
       }
     }
+  }
+
+  Future<void> _pickLogo() async {
+    try {
+      final image = await _imagePicker.pickImage(source: ImageSource.gallery);
+      if (image == null || !mounted) return;
+      final extension = image.name.split('.').last.toLowerCase();
+      if (!{'jpg', 'jpeg', 'png', 'webp'}.contains(extension)) {
+        setState(() => _error = 'Pilih gambar JPEG, PNG, atau WebP.');
+        return;
+      }
+      if (await image.length() > 5 * 1024 * 1024) {
+        setState(() => _error = 'Ukuran logo maksimal 5 MB.');
+        return;
+      }
+      final croppedImage = await ImageCropper().cropImage(
+        sourcePath: image.path,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        compressFormat: ImageCompressFormat.jpg,
+        compressQuality: 90,
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'Atur logo usaha',
+            toolbarColor: GawenColors.primary,
+            toolbarWidgetColor: Colors.white,
+            cropStyle: CropStyle.rectangle,
+            initAspectRatio: CropAspectRatioPreset.square,
+            hideBottomControls: true,
+            lockAspectRatio: true,
+            aspectRatioPresets: [CropAspectRatioPreset.square],
+          ),
+          IOSUiSettings(
+            title: 'Atur logo usaha',
+            doneButtonTitle: 'Simpan',
+            cancelButtonTitle: 'Batal',
+            cropStyle: CropStyle.rectangle,
+            aspectRatioLockEnabled: true,
+            resetAspectRatioEnabled: false,
+            aspectRatioPickerButtonHidden: true,
+            aspectRatioPresets: [CropAspectRatioPreset.square],
+          ),
+        ],
+      );
+      if (croppedImage == null || !mounted) return;
+      setState(() {
+        _error = null;
+        _selectedLogoPath = croppedImage.path;
+      });
+    } catch (_) {
+      if (mounted) {
+        setState(
+          () => _error = 'Logo tidak dapat dibuka. Coba pilih gambar lain.',
+        );
+      }
+    }
+  }
+
+  void _removeLogo() {
+    setState(() {
+      _selectedLogoPath = null;
+      _logo.clear();
+    });
   }
 
   Future<void> _next() async {
@@ -579,10 +736,39 @@ class _EditOrganizationPageState extends State<EditOrganizationPage> {
     OrganizationBloc bloc,
     String id,
   ) async {
+    if (step == 1 && _businessType == null) {
+      throw StateError('Jenis usaha wajib dipilih.');
+    }
+    if (step == 4 && _selectedLogoPath != null) {
+      _uploadingLogo = true;
+      if (mounted) setState(() {});
+      try {
+        bloc.add(
+          OrganizationLogoUploadRequested(
+            organizationId: id,
+            filePath: _selectedLogoPath!,
+          ),
+        );
+        final uploaded = await bloc.stream.firstWhere(
+          (state) =>
+              state.status == OrganizationStatus.ready ||
+              state.status == OrganizationStatus.failure,
+        );
+        if (uploaded.status == OrganizationStatus.failure ||
+            uploaded.organization?.logoUrl == null) {
+          throw StateError(uploaded.message ?? 'Logo usaha gagal diunggah.');
+        }
+        _logo.text = uploaded.organization!.logoUrl!;
+        _selectedLogoPath = null;
+      } finally {
+        _uploadingLogo = false;
+        if (mounted) setState(() {});
+      }
+    }
     final fields = switch (step) {
       1 => {
         'name': _name.text.trim(),
-        'businessType': _businessType.text.trim(),
+        'businessType': _businessType!.apiValue,
         'description': EditOrganizationValidator.nullable(_description.text),
       },
       2 => {
@@ -592,8 +778,13 @@ class _EditOrganizationPageState extends State<EditOrganizationPage> {
       },
       3 => {
         'address': EditOrganizationValidator.nullable(_address.text),
-        'city': EditOrganizationValidator.nullable(_city.text),
-        'province': EditOrganizationValidator.nullable(_province.text),
+        'city':
+            _selectedRegency?.name ??
+            (_regionWasEdited ? null : _legacyRegencyName),
+        'province':
+            _selectedProvince?.name ??
+            (_regionWasEdited ? null : _legacyProvinceName),
+        ..._regionFieldsForSave(),
         'postalCode': EditOrganizationValidator.nullable(_postalCode.text),
       },
       _ => {'logoUrl': EditOrganizationValidator.nullable(_logo.text)},
@@ -613,6 +804,22 @@ class _EditOrganizationPageState extends State<EditOrganizationPage> {
     if (state.status == OrganizationStatus.failure) {
       throw StateError(state.message ?? 'Gagal menyimpan progres.');
     }
+  }
+
+  Map<String, String?> _regionFieldsForSave() {
+    final fields = <String, String?>{};
+    void addRegion(String level, AdministrativeRegion? region) {
+      if (region != null || _regionWasEdited) {
+        fields['${level}Code'] = region?.id;
+        fields['${level}Name'] = region?.name;
+      }
+    }
+
+    addRegion('province', _selectedProvince);
+    addRegion('regency', _selectedRegency);
+    addRegion('district', _selectedDistrict);
+    addRegion('village', _selectedVillage);
+    return fields;
   }
 
   Future<void> _saveOrganization() async {

@@ -1,3 +1,5 @@
+import '../../domain/entities/organization_business_type.dart';
+
 sealed class OrganizationEvent {
   const OrganizationEvent();
 }
@@ -28,7 +30,7 @@ final class OrganizationUpdateRequested extends OrganizationEvent {
 
   final String organizationId;
   final String name;
-  final String businessType;
+  final OrganizationBusinessType businessType;
   final String description;
   final String? logoUrl;
   final String? email;
@@ -50,6 +52,16 @@ final class OrganizationSetupCompletionRequested extends OrganizationEvent {
   const OrganizationSetupCompletionRequested(this.organizationId);
 
   final String organizationId;
+}
+
+final class OrganizationLogoUploadRequested extends OrganizationEvent {
+  const OrganizationLogoUploadRequested({
+    required this.organizationId,
+    required this.filePath,
+  });
+
+  final String organizationId;
+  final String filePath;
 }
 
 final class OrganizationSetupStepSaveRequested extends OrganizationEvent {

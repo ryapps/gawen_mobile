@@ -16,6 +16,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<EmployeeRegistrationSubmitted>(_registerEmployee);
     on<LogoutRequested>(_logout);
     on<AvatarUploadRequested>(_uploadAvatar);
+    on<ProfileUpdateRequested>(_updateProfile);
   }
 
   final AuthRepository _repository;
@@ -168,6 +169,37 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           status: AuthStatus.authenticated,
           user: user,
           clearMessage: true,
+        ),
+      );
+    } on ApiFailure catch (error) {
+      emit(
+        previous.copyWith(
+          status: AuthStatus.authenticated,
+          message: error.message,
+        ),
+      );
+    }
+  }
+
+  Future<void> _updateProfile(
+    ProfileUpdateRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    final previous = state;
+    final user = previous.user;
+    if (user == null || state.status == AuthStatus.loading) return;
+    emit(state.copyWith(status: AuthStatus.loading, clearMessage: true));
+    try {
+      final updatedUser = await _repository.updateProfile(
+        name: event.name,
+        phone: event.phone,
+        photoProfile: user.photoProfile,
+      );
+      emit(
+        previous.copyWith(
+          status: AuthStatus.authenticated,
+          user: updatedUser,
+          message: 'Profil berhasil diperbarui.',
         ),
       );
     } on ApiFailure catch (error) {

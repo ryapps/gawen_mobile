@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../modules/auth/presentation/bloc/auth_bloc.dart';
 import '../../modules/home/pages/home_page.dart';
+import '../../modules/auth/presentation/pages/edit_profile_page.dart';
 import '../../modules/auth/presentation/pages/login_page.dart';
 import '../../modules/auth/presentation/pages/login_mode.dart';
 import '../../modules/auth/presentation/pages/onboarding/onboarding_page.dart';
@@ -38,9 +39,10 @@ class AuthRouterRefresh extends ChangeNotifier {
 }
 
 String _landingPath(AuthState auth) => switch (auth.membershipAccess) {
-  MembershipAccess.active => auth.requiresOrganizationSetup
-      ? AppRoutes.organizationSetup
-      : AppRoutes.home,
+  MembershipAccess.active =>
+    auth.requiresOrganizationSetup
+        ? AppRoutes.organizationSetup
+        : AppRoutes.home,
   MembershipAccess.pending => AppRoutes.pending,
   MembershipAccess.none => AppRoutes.join,
 };
@@ -111,9 +113,8 @@ String? resolveAuthRedirect({
 
   if (location == AppRoutes.home) {
     return switch (auth.membershipAccess) {
-      MembershipAccess.active => auth.requiresOrganizationSetup
-          ? AppRoutes.organizationSetup
-          : null,
+      MembershipAccess.active =>
+        auth.requiresOrganizationSetup ? AppRoutes.organizationSetup : null,
       MembershipAccess.pending => AppRoutes.pending,
       MembershipAccess.none => AppRoutes.join,
     };
@@ -135,6 +136,7 @@ String? resolveAuthRedirect({
     AppRoutes.inviteEmployee,
     AppRoutes.schedule,
     AppRoutes.more,
+    AppRoutes.editProfile,
     AppRoutes.team,
     AppRoutes.permission,
   };
@@ -295,6 +297,11 @@ GoRouter createAppRouter(AuthBloc authBloc, AuthRouterRefresh refresh) =>
           path: AppRoutes.more,
           name: 'more',
           builder: (context, state) => const MorePage(),
+        ),
+        GoRoute(
+          path: AppRoutes.editProfile,
+          name: 'edit-profile',
+          builder: (context, state) => const EditProfilePage(),
         ),
         GoRoute(
           path: AppRoutes.team,

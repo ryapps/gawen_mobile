@@ -26,7 +26,22 @@ String dioErrorMessage(DioException error) {
   }
   final body = error.response?.data;
   if (body is Map<String, dynamic> && body['message'] is String) {
-    return body['message'] as String;
+    final message = body['message'] as String;
+    final details = body['details'];
+    if (details is List) {
+      final issues = details
+          .whereType<Map<String, dynamic>>()
+          .map((issue) {
+            final path = issue['path'];
+            final description = issue['message'];
+            if (path is! String || description is! String) return null;
+            return '$path: $description';
+          })
+          .whereType<String>()
+          .toList(growable: false);
+      if (issues.isNotEmpty) return '$message ${issues.join('; ')}';
+    }
+    return message;
   }
   final statusCode = error.response?.statusCode;
   if (statusCode != null && statusCode >= 500) {

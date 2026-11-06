@@ -48,3 +48,10 @@ final class AvatarUploadRequested extends AuthEvent {
 
   final String filePath;
 }
+
+final class ProfileUpdateRequested extends AuthEvent {
+  const ProfileUpdateRequested({required this.name, required this.phone});
+
+  final String name;
+  final String? phone;
+}

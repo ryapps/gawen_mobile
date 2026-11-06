@@ -46,6 +46,55 @@ void main() {
     expect(output, isNot(contains('private-query-token')));
   });
 
+  test('logs public profile avatar URLs after avatar upload', () async {
+    final lines = <String>[];
+    final originalDebugPrint = debugPrint;
+    debugPrint = (message, {wrapWidth}) => lines.add(message ?? '');
+    addTearDown(() => debugPrint = originalDebugPrint);
+
+    final avatarUrl =
+        'https://cdn.gawen.test/profile-avatars/'
+        '${List.filled(64, 'a').join()}/'
+        '123e4567-e89b-12d3-a456-426614174000.jpg';
+    final client = Dio(BaseOptions(baseUrl: 'https://gawen.test'));
+    client.interceptors.add(ApiLoggingInterceptor());
+    client.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          handler.resolve(
+            Response(
+              requestOptions: options,
+              statusCode: 200,
+              data: {
+                'status': 'ok',
+                'data': {
+                  'user': {
+                    'photoProfile': avatarUrl,
+                    'accessToken': 'private-access-token',
+                  },
+                },
+              },
+            ),
+            true,
+          );
+        },
+      ),
+    );
+
+    await client.post<void>(
+      '/api/users/profile/avatar',
+      data: FormData.fromMap({
+        'avatar': MultipartFile.fromBytes([1, 2, 3], filename: 'avatar.jpg'),
+      }),
+    );
+
+    final output = lines.join('\n');
+    expect(output, contains('[API] REQUEST POST /api/users/profile/avatar'));
+    expect(output, contains(avatarUrl));
+    expect(output, contains('[REDACTED]'));
+    expect(output, isNot(contains('private-access-token')));
+  });
+
   test(
     'logs HTTP errors and redacts sensitive error response fields',
     () async {

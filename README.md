@@ -8,19 +8,23 @@ available, so the team/shop artwork is recreated with Flutter widgets.
 
 ## Run locally
 
-`.env.json` configures `API_BASE_URL` for the physical Android phone connected
-over USB:
+The app loads `API_BASE_URL` from `.env.json` at startup. Set it to the
+development computer's local URL for a physical Android phone connected over
+USB:
 
 ```powershell
 adb reverse tcp:3000 tcp:3000
 flutter run --dart-define-from-file=.env.json
 ```
 
+The `--dart-define-from-file` option is optional; the file is bundled as a
+Flutter asset and loaded by the app. A compile-time `API_BASE_URL`, when
+provided, overrides the value in `.env.json`.
+
 The backend must be running on the development computer at port 3000.
 `adb reverse` forwards the phone's `localhost:3000` to the computer's
 `localhost:3000`; rerun the command after reconnecting USB. For an Android
-emulator, set the URL in `.env.json` to `http://10.0.2.2:3000`. Without a
-define file, the app defaults to `http://10.0.2.2:3000`.
+emulator, set the URL in `.env.json` to `http://10.0.2.2:3000`.
 
 The Android network security configuration permits cleartext HTTP only to
 `localhost` and `10.0.2.2` for local development. Use HTTPS outside local

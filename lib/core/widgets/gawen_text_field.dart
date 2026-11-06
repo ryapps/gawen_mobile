@@ -7,7 +7,7 @@ class GawenTextField extends StatefulWidget {
     required this.controller,
     required this.label,
     required this.hint,
-    required this.icon,
+    this.icon,
     this.keyboardType,
     this.textInputAction,
     this.validator,
@@ -22,7 +22,7 @@ class GawenTextField extends StatefulWidget {
   final TextEditingController controller;
   final String label;
   final String hint;
-  final IconData icon;
+  final IconData? icon;
   final TextInputType? keyboardType;
   final TextInputAction? textInputAction;
   final String? Function(String?)? validator;
@@ -80,7 +80,7 @@ class _GawenTextFieldState extends State<GawenTextField> {
                       ),
                     ),
                   )
-                : Icon(widget.icon, size: 19),
+                : widget.maxLines > 1 || widget.icon == null ? null : Icon(widget.icon, size: 19),
             prefixIconConstraints: widget.indonesianPhone
                 ? const BoxConstraints(minWidth: 58)
                 : null,

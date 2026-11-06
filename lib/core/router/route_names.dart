@@ -18,6 +18,7 @@ abstract final class AppRoutes {
   static const editOrganization = '/organization/edit';
   static const schedule = '/schedule';
   static const more = '/more';
+  static const editProfile = '/profile/edit';
   static const team = '/team';
   static const permission = '/permission';
 }

@@ -15,11 +15,39 @@ class OrganizationBloc extends Bloc<OrganizationEvent, OrganizationState> {
     });
     on<OrganizationLoadRequested>(_load);
     on<OrganizationUpdateRequested>(_update);
+    on<OrganizationLogoUploadRequested>(_uploadLogo);
     on<OrganizationSetupCompletionRequested>(_completeSetup);
     on<OrganizationSetupStepSaveRequested>(_saveSetupStep);
   }
 
   final OrganizationRepository _repository;
+
+  Future<void> _uploadLogo(
+    OrganizationLogoUploadRequested event,
+    Emitter<OrganizationState> emit,
+  ) async {
+    emit(state.copyWith(status: OrganizationStatus.saving, message: null));
+    try {
+      final organization = await _repository.uploadLogo(
+        organizationId: event.organizationId,
+        filePath: event.filePath,
+      );
+      emit(
+        state.copyWith(
+          status: OrganizationStatus.ready,
+          organization: organization,
+          message: 'Logo usaha berhasil diunggah.',
+        ),
+      );
+    } on ApiFailure catch (error) {
+      emit(
+        state.copyWith(
+          status: OrganizationStatus.failure,
+          message: error.message,
+        ),
+      );
+    }
+  }
 
   Future<void> _load(
     OrganizationLoadRequested event,

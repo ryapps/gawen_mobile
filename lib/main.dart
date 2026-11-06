@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import 'core/config/app_config.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'modules/auth/data/auth_repository.dart';
@@ -12,13 +13,18 @@ import 'modules/invitation/data/invitation_repository.dart';
 import 'modules/invitation/presentation/bloc/invitation_bloc.dart';
 import 'modules/organization/data/organization_repository.dart';
 import 'modules/organization/presentation/bloc/organization_bloc.dart';
+import 'modules/regions/data/region_repository.dart';
+import 'modules/regions/presentation/bloc/region_bloc.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await AppConfig.load();
   runApp(
     MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => AuthBloc(AuthRepository())),
         BlocProvider(create: (_) => OrganizationBloc(OrganizationRepository())),
+        BlocProvider(create: (_) => RegionBloc(RegionRepository())),
         BlocProvider(create: (_) => EmployeeBloc(EmployeeRepository())),
         BlocProvider(create: (_) => InvitationBloc(InvitationRepository())),
       ],

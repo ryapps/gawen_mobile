@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_failure.dart';
 import '../domain/entities/organization_entity.dart';
+import '../domain/entities/organization_business_type.dart';
 import 'models/organization_model.dart';
 
 class OrganizationRepository {
@@ -28,7 +29,7 @@ class OrganizationRepository {
   Future<OrganizationEntity> updateOrganization({
     required String organizationId,
     required String name,
-    required String businessType,
+    required OrganizationBusinessType businessType,
     required String description,
     required String? logoUrl,
     required String? email,
@@ -45,7 +46,7 @@ class OrganizationRepository {
       '/api/organizations/$organizationId',
       data: {
         'name': name,
-        'businessType': businessType,
+        'businessType': businessType.apiValue,
         'description': description,
         'logoUrl': logoUrl,
         'email': email,
@@ -83,6 +84,36 @@ class OrganizationRepository {
           data['organization'] as Map<String, dynamic>,
         );
       });
+
+  Future<OrganizationEntity> uploadLogo({
+    required String organizationId,
+    required String filePath,
+  }) => executeApiRequest(() async {
+    final extension = filePath.split('.').last.toLowerCase();
+    final subType = switch (extension) {
+      'jpg' || 'jpeg' => 'jpeg',
+      'png' => 'png',
+      'webp' => 'webp',
+      _ => throw const ApiFailure('Pilih gambar JPEG, PNG, atau WebP.'),
+    };
+    final response = await _client.post<Map<String, dynamic>>(
+      '/api/organizations/$organizationId/logo',
+      data: FormData.fromMap({
+        'logo': await MultipartFile.fromFile(
+          filePath,
+          contentType: DioMediaType('image', subType),
+        ),
+      }),
+    );
+    final data = response.data?['data'];
+    if (data is! Map<String, dynamic> ||
+        data['organization'] is! Map<String, dynamic>) {
+      throw const ApiFailure('Respons upload logo tidak valid.');
+    }
+    return OrganizationModel.fromJson(
+      data['organization'] as Map<String, dynamic>,
+    );
+  });
 
   Future<OrganizationEntity> saveSetupStep({
     required String organizationId,

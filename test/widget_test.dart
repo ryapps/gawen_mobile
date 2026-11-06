@@ -9,6 +9,7 @@ import 'package:frontend/modules/auth/presentation/bloc/auth_bloc.dart';
 import 'package:frontend/modules/auth/data/auth_repository.dart';
 import 'package:frontend/modules/auth/domain/entities/user_entity.dart';
 import 'package:frontend/modules/employees/domain/entities/membership_entity.dart';
+import 'package:frontend/modules/organization/domain/entities/organization_business_type.dart';
 import 'package:frontend/modules/organization/domain/entities/organization_entity.dart';
 import 'package:frontend/modules/auth/presentation/pages/login_page.dart';
 import 'package:frontend/modules/auth/presentation/pages/onboarding/onboarding_page.dart';
@@ -44,7 +45,7 @@ final _ownerMembership = MembershipEntity(
     id: 'organization',
     name: 'Gawen',
     timezone: 'Asia/Jakarta',
-    businessType: 'Cafe',
+    businessType: OrganizationBusinessType.foodAndBeverage,
     setupCompletedAt: DateTime.utc(2026, 10, 28),
   ),
 );

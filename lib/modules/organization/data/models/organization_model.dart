@@ -1,4 +1,5 @@
 import '../../domain/entities/organization_entity.dart';
+import '../../domain/entities/organization_business_type.dart';
 
 class OrganizationModel extends OrganizationEntity {
   const OrganizationModel({
@@ -14,6 +15,14 @@ class OrganizationModel extends OrganizationEntity {
     super.address,
     super.city,
     super.province,
+    super.provinceCode,
+    super.provinceName,
+    super.regencyCode,
+    super.regencyName,
+    super.districtCode,
+    super.districtName,
+    super.villageCode,
+    super.villageName,
     super.postalCode,
     super.currency,
     super.setupCompletedAt,
@@ -27,7 +36,10 @@ class OrganizationModel extends OrganizationEntity {
     final id = json['id'];
     final name = json['name'];
     final timezone = json['timezone'];
-    final businessType = _nullableString(json, 'businessType');
+    final rawBusinessType = json['businessType'];
+    final businessType = rawBusinessType == null
+        ? null
+        : OrganizationBusinessType.fromApiValue(rawBusinessType);
     final description = _nullableString(json, 'description');
     final logoUrl = _nullableString(json, 'logoUrl');
     final email = _nullableString(json, 'email');
@@ -36,10 +48,33 @@ class OrganizationModel extends OrganizationEntity {
     final address = _nullableString(json, 'address');
     final city = _nullableString(json, 'city');
     final province = _nullableString(json, 'province');
+    final provinceCode = _nullableString(json, 'provinceCode');
+    final provinceName = _nullableString(json, 'provinceName');
+    final regencyCode = _nullableString(json, 'regencyCode');
+    final regencyName = _nullableString(json, 'regencyName');
+    final districtCode = _nullableString(json, 'districtCode');
+    final districtName = _nullableString(json, 'districtName');
+    final villageCode = _nullableString(json, 'villageCode');
+    final villageName = _nullableString(json, 'villageName');
     final postalCode = _nullableString(json, 'postalCode');
     final currency = _nullableString(json, 'currency');
     final memberCount = json['memberCount'];
     final setupStep = json['setupStep'] ?? 0;
+    _validateRegionCode(provinceCode, provinceName, [2], 'province');
+    _validateRegionCode(regencyCode, regencyName, [2, 2], 'regency');
+    _validateRegionCode(districtCode, districtName, [2, 2, 2], 'district');
+    _validateRegionCode(villageCode, villageName, [2, 2, 2, 4], 'village');
+    if ((regencyCode != null &&
+            (provinceCode == null ||
+                !regencyCode.startsWith('$provinceCode.'))) ||
+        (districtCode != null &&
+            (regencyCode == null ||
+                !districtCode.startsWith('$regencyCode.'))) ||
+        (villageCode != null &&
+            (districtCode == null ||
+                !villageCode.startsWith('$districtCode.')))) {
+      throw const FormatException('Hierarki wilayah organisasi tidak valid.');
+    }
     if (id is! String || name is! String || timezone is! String) {
       throw const FormatException('Data organisasi tidak valid.');
     }
@@ -62,6 +97,14 @@ class OrganizationModel extends OrganizationEntity {
       address: address,
       city: city,
       province: province,
+      provinceCode: provinceCode,
+      provinceName: provinceName,
+      regencyCode: regencyCode,
+      regencyName: regencyName,
+      districtCode: districtCode,
+      districtName: districtName,
+      villageCode: villageCode,
+      villageName: villageName,
       postalCode: postalCode,
       currency: currency,
       setupCompletedAt: _date(json['setupCompletedAt']),
@@ -76,7 +119,7 @@ class OrganizationModel extends OrganizationEntity {
     'id': id,
     'name': name,
     'timezone': timezone,
-    'businessType': businessType,
+    'businessType': businessType?.apiValue,
     'description': description,
     'logoUrl': logoUrl,
     'email': email,
@@ -85,6 +128,14 @@ class OrganizationModel extends OrganizationEntity {
     'address': address,
     'city': city,
     'province': province,
+    'provinceCode': provinceCode,
+    'provinceName': provinceName,
+    'regencyCode': regencyCode,
+    'regencyName': regencyName,
+    'districtCode': districtCode,
+    'districtName': districtName,
+    'villageCode': villageCode,
+    'villageName': villageName,
     'postalCode': postalCode,
     'currency': currency,
     if (setupCompletedAt != null)
@@ -94,6 +145,27 @@ class OrganizationModel extends OrganizationEntity {
     if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
     if (updatedAt != null) 'updatedAt': updatedAt!.toIso8601String(),
   };
+}
+
+void _validateRegionCode(
+  String? code,
+  String? name,
+  List<int> segmentLengths,
+  String level,
+) {
+  final segments = code?.split('.');
+  if (code != null &&
+      (segments == null ||
+          segments.length != segmentLengths.length ||
+          !List.generate(
+            segmentLengths.length,
+            (index) =>
+                segments[index].length == segmentLengths[index] &&
+                RegExp(r'^\d+$').hasMatch(segments[index]),
+          ).every((isValid) => isValid) ||
+          name == null)) {
+    throw FormatException('Kode wilayah $level organisasi tidak valid.');
+  }
 }
 
 String? _nullableString(Map<String, dynamic> json, String key) {

@@ -3,7 +3,11 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 
 import '../../../../core/widgets/gawen_text_field.dart';
+import '../../../../core/widgets/gawen_image.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../domain/entities/organization_business_type.dart';
+import '../../../regions/domain/entities/administrative_region.dart';
+import '../../../regions/presentation/widgets/organization_region_fields.dart';
 
 class OrganizationSetupProgress extends StatelessWidget {
   const OrganizationSetupProgress({
@@ -310,64 +314,70 @@ class PersonalProfileStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Column(
     children: [
-     Material(
-  color: Colors.transparent,
-  shape: const CircleBorder(),
-  child: InkWell(
-    onTap: isUploadingAvatar ? null : onPickAvatar,
-    customBorder: const CircleBorder(),
-    child: Stack(
-      alignment: Alignment.bottomRight,
-      children: [
-        CircleAvatar(
-          radius: 39,
-          backgroundColor: GawenColors.primarySoft,
-          backgroundImage: selectedAvatarPath != null
-              ? FileImage(File(selectedAvatarPath!))
-              : photoProfile.text.isNotEmpty
-                  ? NetworkImage(photoProfile.text)
-                  : null,
-          child: selectedAvatarPath == null && photoProfile.text.isEmpty
-              ? const Icon(
-                  Icons.person_outline,
-                  size: 38,
+      Material(
+        color: Colors.transparent,
+        shape: const CircleBorder(),
+        child: InkWell(
+          onTap: isUploadingAvatar ? null : onPickAvatar,
+          customBorder: const CircleBorder(),
+          child: Stack(
+            alignment: Alignment.bottomRight,
+            children: [
+              CircleAvatar(
+                radius: 39,
+                backgroundColor: GawenColors.primarySoft,
+                child: selectedAvatarPath != null
+                    ? ClipOval(
+                        child: Image.file(
+                          File(selectedAvatarPath!),
+                          width: 78,
+                          height: 78,
+                          fit: BoxFit.cover,
+                        ),
+                      )
+                    : photoProfile.text.trim().isNotEmpty
+                    ? ClipOval(
+                        child: GawenImage(
+                          source: photoProfile.text,
+                          width: 78,
+                          height: 78,
+                          fit: BoxFit.cover,
+                        ),
+                      )
+                    : const Icon(
+                        Icons.person_outline,
+                        size: 38,
+                        color: GawenColors.primary,
+                      ),
+              ),
+              Container(
+                width: 27,
+                height: 27,
+                decoration: BoxDecoration(
                   color: GawenColors.primary,
-                )
-              : null,
-        ),
-        Container(
-          width: 27,
-          height: 27,
-          decoration: BoxDecoration(
-            color: GawenColors.primary,
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: Colors.white,
-              width: 2,
-            ),
-          ),
-          child: const Icon(
-            Icons.camera_alt_outlined,
-            size: 15,
-            color: Colors.white,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2),
+                ),
+                child: const Icon(
+                  Icons.camera_alt_outlined,
+                  size: 15,
+                  color: Colors.white,
+                ),
+              ),
+            ],
           ),
         ),
-      ],
-    ),
-  ),
-),
+      ),
       GawenTextField(
         controller: name,
         label: 'Nama lengkap *',
-        hint: 'Nama lengkap',
-        icon: Icons.person_outline,
+        hint: 'Jhon Doe',
         validator: nameValidator,
       ),
       GawenTextField(
         controller: email,
         label: 'Email',
-        hint: 'Email',
-        icon: Icons.email_outlined,
+        hint: 'john.doe@example.com',
         keyboardType: TextInputType.emailAddress,
         enabled: false,
       ),
@@ -375,14 +385,11 @@ class PersonalProfileStep extends StatelessWidget {
         controller: phone,
         label: 'Nomor telepon *',
         hint: '81234567890',
-        icon: Icons.phone_outlined,
         keyboardType: TextInputType.phone,
         indonesianPhone: true,
         validator: phoneValidator,
       ),
       const SizedBox(height: 22),
-     
-      
     ],
   );
 }
@@ -391,6 +398,7 @@ class BusinessInformationStep extends StatelessWidget {
   const BusinessInformationStep({
     required this.name,
     required this.businessType,
+    required this.onBusinessTypeChanged,
     required this.description,
     required this.nameValidator,
     required this.businessTypeValidator,
@@ -398,10 +406,11 @@ class BusinessInformationStep extends StatelessWidget {
   });
 
   final TextEditingController name;
-  final TextEditingController businessType;
+  final OrganizationBusinessType? businessType;
+  final ValueChanged<OrganizationBusinessType?> onBusinessTypeChanged;
   final TextEditingController description;
   final String? Function(String?) nameValidator;
-  final String? Function(String?) businessTypeValidator;
+  final String? Function(OrganizationBusinessType?) businessTypeValidator;
 
   @override
   Widget build(BuildContext context) => Column(
@@ -409,24 +418,50 @@ class BusinessInformationStep extends StatelessWidget {
       GawenTextField(
         controller: name,
         label: 'Nama usaha *',
-        hint: 'Contoh: Yanto Kopi',
-        icon: Icons.storefront_outlined,
+        hint: 'Yanto Kopi',
         maxLength: 120,
         validator: nameValidator,
       ),
-      GawenTextField(
-        controller: businessType,
-        label: 'Jenis usaha *',
-        hint: 'Contoh: Kedai kopi',
-        icon: Icons.category_outlined,
-        maxLength: 80,
-        validator: businessTypeValidator,
+      Padding(
+        padding: const EdgeInsets.only(top: 17),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(left: 2, bottom: 7),
+              child: Text(
+                'Jenis usaha *',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+              ),
+            ),
+            DropdownMenu<OrganizationBusinessType>(
+              width: MediaQuery.sizeOf(context).width - 48,
+              inputDecorationTheme: const InputDecorationTheme(
+                contentPadding: EdgeInsets.fromLTRB(12, 12, 12, 12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(8)),
+                ),
+                fillColor: Colors.white,
+                filled: true,
+              ),
+              menuStyle: MenuStyle(
+                backgroundColor: MaterialStateProperty.all(Colors.white),
+              ),
+              hintText: 'Pilih jenis usaha',
+              dropdownMenuEntries: OrganizationBusinessType.values
+                  .map(
+                    (type) => DropdownMenuEntry(value: type, label: type.label),
+                  )
+                  .toList(),
+              onSelected: onBusinessTypeChanged,
+            ),
+          ],
+        ),
       ),
       GawenTextField(
         controller: description,
         label: 'Deskripsi',
         hint: 'Ceritakan tentang usaha',
-        icon: Icons.notes_outlined,
         maxLines: 4,
         maxLength: 2000,
       ),
@@ -459,7 +494,6 @@ class BusinessContactStep extends StatelessWidget {
         controller: phone,
         label: 'Telepon usaha',
         hint: '81234567890',
-        icon: Icons.phone_outlined,
         keyboardType: TextInputType.phone,
         indonesianPhone: true,
         validator: phoneValidator,
@@ -468,7 +502,6 @@ class BusinessContactStep extends StatelessWidget {
         controller: email,
         label: 'Email usaha',
         hint: 'usaha@email.com',
-        icon: Icons.mail_outline,
         keyboardType: TextInputType.emailAddress,
         validator: emailValidator,
       ),
@@ -476,7 +509,6 @@ class BusinessContactStep extends StatelessWidget {
         controller: website,
         label: 'Website',
         hint: 'https://contoh.com',
-        icon: Icons.language_outlined,
         validator: websiteValidator,
       ),
     ],
@@ -486,60 +518,172 @@ class BusinessContactStep extends StatelessWidget {
 class BusinessAddressStep extends StatelessWidget {
   const BusinessAddressStep({
     required this.address,
-    required this.city,
     required this.province,
+    required this.regency,
+    required this.district,
+    required this.village,
+    required this.legacyProvinceName,
+    required this.legacyRegencyName,
+    required this.onProvinceChanged,
+    required this.onRegencyChanged,
+    required this.onDistrictChanged,
+    required this.onVillageChanged,
     required this.postalCode,
     required this.validator,
     super.key,
   });
 
   final TextEditingController address;
-  final TextEditingController city;
-  final TextEditingController province;
+  final AdministrativeRegion? province;
+  final AdministrativeRegion? regency;
+  final AdministrativeRegion? district;
+  final AdministrativeRegion? village;
+  final String? legacyProvinceName;
+  final String? legacyRegencyName;
+  final ValueChanged<AdministrativeRegion?> onProvinceChanged;
+  final ValueChanged<AdministrativeRegion?> onRegencyChanged;
+  final ValueChanged<AdministrativeRegion?> onDistrictChanged;
+  final ValueChanged<AdministrativeRegion?> onVillageChanged;
   final TextEditingController postalCode;
   final String? Function(String?) Function(int, String) validator;
 
   @override
   Widget build(BuildContext context) => Column(
     children: [
-      _field(address, 'Alamat lengkap', Icons.location_on_outlined, 255),
-      _field(city, 'Kota', Icons.location_city_outlined, 120),
-      _field(province, 'Provinsi', Icons.map_outlined, 120),
-      _field(postalCode, 'Kode pos', Icons.markunread_mailbox_outlined, 20),
+      _field(address, 'Alamat lengkap', 255),
+      OrganizationRegionFields(
+        province: province,
+        regency: regency,
+        district: district,
+        village: village,
+        legacyProvinceName: legacyProvinceName,
+        legacyRegencyName: legacyRegencyName,
+        onProvinceChanged: onProvinceChanged,
+        onRegencyChanged: onRegencyChanged,
+        onDistrictChanged: onDistrictChanged,
+        onVillageChanged: onVillageChanged,
+      ),
+      _field(postalCode, 'Kode pos', 20),
     ],
   );
 
-  Widget _field(
-    TextEditingController controller,
-    String label,
-    IconData icon,
-    int max,
-  ) => GawenTextField(
-    controller: controller,
-    label: label,
-    hint: label,
-    icon: icon,
-    maxLength: max,
-    validator: validator(max, label),
-  );
+  Widget _field(TextEditingController controller, String label, int max) =>
+      GawenTextField(
+        controller: controller,
+        label: label,
+        hint: label,
+        maxLength: max,
+        validator: validator(max, label),
+      );
 }
 
 class BusinessIdentityStep extends StatelessWidget {
   const BusinessIdentityStep({
     required this.logo,
-    required this.logoValidator,
+    required this.selectedLogoPath,
+    required this.isUploadingLogo,
+    required this.onPickLogo,
+    required this.onRemoveLogo,
     super.key,
   });
 
   final TextEditingController logo;
-  final String? Function(String?) logoValidator;
+  final String? selectedLogoPath;
+  final bool isUploadingLogo;
+  final VoidCallback onPickLogo;
+  final VoidCallback onRemoveLogo;
 
   @override
-  Widget build(BuildContext context) => GawenTextField(
-    controller: logo,
-    label: 'Logo usaha (URL)',
-    hint: 'https://contoh.com/logo.png',
-    icon: Icons.image_outlined,
-    validator: logoValidator,
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(top: 17),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(left: 2, bottom: 7),
+          child: Text(
+            'Logo usaha',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+          ),
+        ),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border.all(color: GawenColors.border),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Column(
+            children: [
+              Container(
+                width: 116,
+                height: 116,
+                clipBehavior: Clip.antiAlias,
+                decoration: BoxDecoration(
+                  color: GawenColors.primarySoft,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: selectedLogoPath != null
+                    ? Image.file(File(selectedLogoPath!), fit: BoxFit.cover)
+                    : logo.text.isNotEmpty
+                    ? GawenImage(
+                        source: logo.text,
+                        width: 116,
+                        height: 116,
+                        fit: BoxFit.cover,
+                      )
+                    : const Icon(
+                        Icons.storefront_outlined,
+                        size: 48,
+                        color: GawenColors.primary,
+                      ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                selectedLogoPath != null || logo.text.isNotEmpty
+                    ? 'Logo usaha'
+                    : 'Tambahkan logo usaha',
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'Format JPEG, PNG, atau WebP · Maksimal 5 MB',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: GawenColors.muted, fontSize: 12),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: isUploadingLogo ? null : onPickLogo,
+                      icon: const Icon(Icons.photo_library_outlined),
+                      label: Text(
+                        selectedLogoPath != null || logo.text.isNotEmpty
+                            ? 'Ganti gambar'
+                            : 'Pilih gambar',
+                      ),
+                    ),
+                  ),
+                  if (selectedLogoPath != null || logo.text.isNotEmpty) ...[
+                    const SizedBox(width: 8),
+                    IconButton(
+                      tooltip: 'Hapus logo',
+                      onPressed: isUploadingLogo ? null : onRemoveLogo,
+                      icon: const Icon(Icons.delete_outline),
+                    ),
+                  ],
+                ],
+              ),
+              if (isUploadingLogo) ...[
+                const SizedBox(height: 12),
+                const LinearProgressIndicator(),
+              ],
+            ],
+          ),
+        ),
+      ],
+    ),
   );
 }

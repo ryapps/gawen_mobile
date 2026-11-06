@@ -6,8 +6,62 @@ import 'package:frontend/modules/employees/domain/entities/join_request_entity.d
 import 'package:frontend/modules/employees/domain/entities/membership_entity.dart';
 import 'package:frontend/modules/invitation/data/models/invitation_model.dart';
 import 'package:frontend/modules/organization/data/models/organization_model.dart';
+import 'package:frontend/modules/organization/domain/entities/organization_business_type.dart';
+import 'package:frontend/modules/regions/data/models/administrative_region_model.dart';
 
 void main() {
+  test('administrative region models accept API string and numeric IDs', () {
+    expect(
+      AdministrativeRegionModel.fromJson({
+        'id': '31',
+        'name': 'DKI Jakarta',
+      }).id,
+      '31',
+    );
+    expect(
+      AdministrativeRegionModel.fromJson({'id': 3171, 'name': 'Jakarta'}).id,
+      '3171',
+    );
+    expect(
+      () => AdministrativeRegionModel.fromJson({'id': null, 'name': 'Invalid'}),
+      throwsFormatException,
+    );
+  });
+
+  test('organization business types map API values and Indonesian labels', () {
+    expect(
+      OrganizationBusinessType.values.map((type) => type.apiValue).toList(),
+      [
+        'FOOD_AND_BEVERAGE',
+        'RETAIL',
+        'SERVICES',
+        'BEAUTY_AND_WELLNESS',
+        'AUTOMOTIVE',
+        'MANUFACTURING',
+        'HOSPITALITY',
+        'OTHER',
+      ],
+    );
+    expect(OrganizationBusinessType.values.map((type) => type.label).toList(), [
+      'Makanan & Minuman',
+      'Retail / Perdagangan',
+      'Jasa',
+      'Kecantikan & Kebugaran',
+      'Otomotif',
+      'Manufaktur',
+      'Perhotelan & Akomodasi',
+      'Lainnya',
+    ]);
+    expect(
+      OrganizationBusinessType.fromApiValue('FOOD_AND_BEVERAGE'),
+      OrganizationBusinessType.foodAndBeverage,
+    );
+    expect(
+      () => OrganizationBusinessType.fromApiValue('CAFE'),
+      throwsFormatException,
+    );
+  });
+
   test('user and membership models parse and serialize profile data', () {
     final user = UserModel.fromJson({
       'id': 'user-1',
@@ -22,7 +76,15 @@ void main() {
         'id': 'organization-1',
         'name': 'Warung Ayu',
         'timezone': 'Asia/Jakarta',
-        'businessType': 'Cafe',
+        'businessType': 'FOOD_AND_BEVERAGE',
+        'provinceCode': '31',
+        'provinceName': 'DKI Jakarta',
+        'regencyCode': '31.74',
+        'regencyName': 'Kota Administrasi Jakarta Selatan',
+        'districtCode': '31.74.07',
+        'districtName': 'Kebayoran Baru',
+        'villageCode': '31.74.07.1002',
+        'villageName': 'Gunung',
         'setupCompletedAt': '2026-10-28T14:00:00.000Z',
       },
     });
@@ -30,9 +92,14 @@ void main() {
     expect(user.phone, isNull);
     expect(membership.role, MembershipRole.owner);
     expect(membership.organization?.name, 'Warung Ayu');
-    expect(membership.organization?.businessType, 'Cafe');
+    expect(membership.organization?.villageCode, '31.74.07.1002');
+    expect(
+      membership.organization?.businessType,
+      OrganizationBusinessType.foodAndBeverage,
+    );
     expect(membership.toJson()['role'], 'OWNER');
     expect(membership.toJson()['organization']['timezone'], 'Asia/Jakarta');
+    expect(membership.toJson()['organization']['provinceCode'], '31');
     expect(
       membership.toJson()['organization']['setupCompletedAt'],
       '2026-10-28T14:00:00.000Z',
@@ -48,7 +115,15 @@ void main() {
       'id': 'organization-1',
       'name': 'Warung Ayu',
       'timezone': 'Asia/Jakarta',
-      'businessType': 'Cafe',
+      'businessType': 'FOOD_AND_BEVERAGE',
+      'provinceCode': '31',
+      'provinceName': 'DKI Jakarta',
+      'regencyCode': '31.74',
+      'regencyName': 'Kota Administrasi Jakarta Selatan',
+      'districtCode': '31.74.07',
+      'districtName': 'Kebayoran Baru',
+      'villageCode': '31.74.07.1002',
+      'villageName': 'Gunung',
       'setupCompletedAt': '2026-10-28T14:00:00.000Z',
       'memberCount': 3,
       'createdAt': '2026-10-01T10:00:00.000Z',
@@ -56,10 +131,12 @@ void main() {
     });
 
     expect(model.memberCount, 3);
+    expect(model.districtName, 'Kebayoran Baru');
     expect(model.isSetupComplete, isTrue);
     expect(model.createdAt, DateTime.utc(2026, 10, 1, 10));
     expect(model.toJson()['memberCount'], 3);
-    expect(model.toJson()['businessType'], 'Cafe');
+    expect(model.businessType, OrganizationBusinessType.foodAndBeverage);
+    expect(model.toJson()['businessType'], 'FOOD_AND_BEVERAGE');
     expect(
       OrganizationModel.fromJson({
         'id': 'organization-2',
@@ -67,6 +144,30 @@ void main() {
         'timezone': 'Asia/Jakarta',
       }).memberCount,
       isNull,
+    );
+  });
+
+  test('organization model rejects malformed administrative hierarchies', () {
+    expect(
+      () => OrganizationModel.fromJson({
+        'id': 'organization-1',
+        'name': 'Warung Ayu',
+        'timezone': 'Asia/Jakarta',
+        'provinceCode': '31',
+        'provinceName': 'DKI Jakarta',
+        'regencyCode': '32.73',
+        'regencyName': 'Kota Bandung',
+      }),
+      throwsFormatException,
+    );
+    expect(
+      () => OrganizationModel.fromJson({
+        'id': 'organization-1',
+        'name': 'Warung Ayu',
+        'timezone': 'Asia/Jakarta',
+        'provinceCode': '31',
+      }),
+      throwsFormatException,
     );
   });
 
@@ -109,6 +210,15 @@ void main() {
       () => OrganizationModel.fromJson({
         'id': 'organization-1',
         'name': 'Warung',
+      }),
+      throwsFormatException,
+    );
+    expect(
+      () => OrganizationModel.fromJson({
+        'id': 'organization-1',
+        'name': 'Warung',
+        'timezone': 'Asia/Jakarta',
+        'businessType': 'CAFE',
       }),
       throwsFormatException,
     );

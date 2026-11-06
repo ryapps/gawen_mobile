@@ -46,7 +46,7 @@ class AuthRepository {
 
   Future<UserEntity> updateProfile({
     required String name,
-    required String phone,
+    required String? phone,
     required String? photoProfile,
   }) => executeApiRequest(() async {
     final response = await _client.patch<Map<String, dynamic>>(

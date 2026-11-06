@@ -12,6 +12,10 @@ class ApiLoggingInterceptor extends Interceptor {
   static final _jwt = RegExp(
     r'\beyJ[A-Za-z0-9_-]*\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b',
   );
+  static final _publicProfileAvatarUrl = RegExp(
+    r'^https?://[^/\s]+(?:/[^?\s]*)?/profile-avatars/[0-9a-f]{64}/[0-9a-f-]+\.(?:jpg|png|webp)$',
+    caseSensitive: false,
+  );
   static const _maxLineLength = 900;
 
   @override
@@ -86,16 +90,22 @@ class ApiLoggingInterceptor extends Interceptor {
         try {
           return _redact(jsonDecode(value));
         } on FormatException {
-          return _redactString(value);
+          return _redactString(value, key);
         }
       }
-      return _redactString(value);
+      return _redactString(value, key);
     }
     if (value == null || value is num || value is bool) return value;
     return '<${value.runtimeType}>';
   }
 
-  String _redactString(String value) => value
-      .replaceAll(_jwt, '[REDACTED]')
-      .replaceAll(_opaqueToken, '[REDACTED]');
+  String _redactString(String value, [String? key]) {
+    if (key?.toLowerCase() == 'photoprofile' &&
+        _publicProfileAvatarUrl.hasMatch(value)) {
+      return value;
+    }
+    return value
+        .replaceAll(_jwt, '[REDACTED]')
+        .replaceAll(_opaqueToken, '[REDACTED]');
+  }
 }

@@ -1,11 +1,113 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:frontend/core/network/api_failure.dart';
 import 'package:frontend/modules/employees/data/employee_repository.dart';
 import 'package:frontend/modules/employees/domain/entities/membership_entity.dart';
 import 'package:frontend/modules/invitation/data/invitation_repository.dart';
 import 'package:frontend/modules/organization/data/organization_repository.dart';
+import 'package:frontend/modules/regions/data/region_repository.dart';
 
 void main() {
+  test(
+    'region repository loads and caches hierarchical API responses',
+    () async {
+      final paths = <String>[];
+      final urls = <Uri>[];
+      final client = Dio(BaseOptions(baseUrl: RegionRepository.apiBaseUrl));
+      client.interceptors.add(
+        InterceptorsWrapper(
+          onRequest: (options, handler) {
+            paths.add(options.path);
+            urls.add(options.uri);
+            final region = switch (options.path) {
+              '/provinces.json' => {'id': '31', 'name': 'DKI Jakarta'},
+              '/regencies/31.json' => {
+                'id': '31.74',
+                'name': 'Kota Administrasi Jakarta Selatan',
+              },
+              '/districts/31.74.json' => {
+                'id': '31.74.07',
+                'name': 'Kebayoran Baru',
+              },
+              '/villages/31.74.07.json' => {
+                'id': '31.74.07.1002',
+                'name': 'Gunung',
+              },
+              _ => throw StateError('Unexpected region path ${options.path}'),
+            };
+            handler.resolve(
+              Response(
+                requestOptions: options,
+                statusCode: 200,
+                data: {
+                  'data': [region],
+                },
+              ),
+            );
+          },
+        ),
+      );
+      final repository = RegionRepository(client: client);
+
+      final provinces = await repository.getProvinces();
+      await repository.getProvinces();
+      final regencies = await repository.getRegencies('31');
+      final districts = await repository.getDistricts('31.74');
+      final villages = await repository.getVillages('31.74.07');
+
+      expect(paths, [
+        '/provinces.json',
+        '/regencies/31.json',
+        '/districts/31.74.json',
+        '/villages/31.74.07.json',
+      ]);
+      expect(
+        urls.first,
+        Uri.parse(
+          'https://www.emsifa.com/api-wilayah-indonesia/v2/provinces.json',
+        ),
+      );
+      expect(provinces.single.name, 'DKI Jakarta');
+      expect(regencies.single.id, '31.74');
+      expect(districts.single.name, 'Kebayoran Baru');
+      expect(villages.single.id, '31.74.07.1002');
+    },
+  );
+
+  test(
+    'region repository reports network failures with useful detail',
+    () async {
+      final client = Dio(
+        BaseOptions(baseUrl: 'https://www.emsifa.com/api-wilayah-indonesia/v2'),
+      );
+      client.interceptors.add(
+        InterceptorsWrapper(
+          onRequest: (options, handler) {
+            handler.reject(
+              DioException(
+                requestOptions: options,
+                type: DioExceptionType.connectionError,
+              ),
+            );
+          },
+        ),
+      );
+
+      await expectLater(
+        RegionRepository(client: client).getProvinces(),
+        throwsA(
+          isA<ApiFailure>().having(
+            (failure) => failure.message,
+            'message',
+            contains('Tidak dapat terhubung'),
+          ),
+        ),
+      );
+    },
+  );
+
   test('organization repository parses the existing detail response', () async {
     final paths = <String>[];
     final repository = OrganizationRepository(
@@ -32,6 +134,41 @@ void main() {
     expect(paths, ['/api/organizations/organization-1']);
     expect(organization.name, 'Warung Ayu');
     expect(organization.memberCount, 4);
+  });
+
+  test('organization repository uploads logo as multipart image', () async {
+    final directory = await Directory.systemTemp.createTemp('gawen-logo-test');
+    final image = File('${directory.path}\\logo.jpg');
+    await image.writeAsBytes([1, 2, 3]);
+    addTearDown(() => directory.delete(recursive: true));
+
+    RequestOptions? request;
+    final repository = OrganizationRepository(
+      client: _client((options) {
+        request = options;
+        return {
+          'status': 'ok',
+          'data': {
+            'organization': {
+              'id': 'organization-1',
+              'name': 'Warung Ayu',
+              'timezone': 'Asia/Jakarta',
+              'logoUrl': 'https://cdn.gawen.test/organization-logos/logo.jpg',
+            },
+          },
+        };
+      }),
+    );
+
+    final organization = await repository.uploadLogo(
+      organizationId: 'organization-1',
+      filePath: image.path,
+    );
+
+    expect(request?.path, '/api/organizations/organization-1/logo');
+    expect(request?.data, isA<FormData>());
+    expect((request!.data as FormData).files.single.key, 'logo');
+    expect(organization.logoUrl, contains('/organization-logos/'));
   });
 
   test(
