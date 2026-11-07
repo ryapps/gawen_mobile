@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:frontend/core/widgets/app_bar.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:frontend/modules/organization/presentation/validators/edit_organization_validator.dart';
@@ -189,7 +190,7 @@ class _EditOrganizationPageState extends State<EditOrganizationPage> {
     return Scaffold(
       appBar: widget.isSetup
           ? null
-          : AppBar(title: const Text('Pengaturan Perusahaan')),
+          : CustomAppBar(title: 'Pengaturan Perusahaan',),
       body: SafeArea(
         child: _loading
             ? const Center(child: CircularProgressIndicator())
@@ -836,7 +837,7 @@ class _EditOrganizationPageState extends State<EditOrganizationPage> {
           _loadedId!,
         );
       }
-      if (mounted) context.go(AppRoutes.organization);
+      if (mounted) context.pop();
     } catch (error) {
       if (mounted) setState(() => _error = '$error');
     } finally {

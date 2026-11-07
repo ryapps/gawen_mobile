@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/router/route_names.dart';
-import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/gawen_widgets.dart';
-import '../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../../core/router/route_names.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/gawen_widgets.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
 
 class PendingApprovalPage extends StatelessWidget {
   const PendingApprovalPage({super.key});

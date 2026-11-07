@@ -2,8 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/router/route_names.dart';
-import '../../../core/theme/app_theme.dart';
+import '../router/route_names.dart';
+import '../theme/app_theme.dart';
 
 class MainNavigation extends StatelessWidget {
   const MainNavigation({
@@ -17,28 +17,28 @@ class MainNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final selectedIndex = switch (currentPath) {
-      AppRoutes.home => 0,
-      AppRoutes.employees || AppRoutes.team => 1,
-      AppRoutes.schedule => 2,
-      _ => 3,
-    };
-
-    final paths = [
-      AppRoutes.home,
-      isOwner ? AppRoutes.employees : AppRoutes.team,
-      AppRoutes.schedule,
-      AppRoutes.more,
+    final items = [
+      (path: AppRoutes.home, label: 'Home', icon: CupertinoIcons.home),
+      if (isOwner)
+        (
+          path: AppRoutes.employees,
+          label: 'Karyawan',
+          icon: CupertinoIcons.person_2,
+        ),
+      (
+        path: AppRoutes.schedule,
+        label: 'Jadwal',
+        icon: CupertinoIcons.calendar,
+      ),
+      (
+        path: AppRoutes.more,
+        label: 'Lainnya',
+        icon: CupertinoIcons.ellipsis_circle,
+      ),
     ];
-
-    const labels = ['Home', 'Karyawan', 'Jadwal', 'Lainnya'];
-
-    const icons = [
-      CupertinoIcons.home,
-      CupertinoIcons.person_2,
-      CupertinoIcons.calendar,
-      CupertinoIcons.ellipsis_circle,
-    ];
+    final selectedPath = currentPath == AppRoutes.team
+        ? AppRoutes.home
+        : currentPath;
 
     return SafeArea(
       child: Container(
@@ -48,8 +48,9 @@ class MainNavigation extends StatelessWidget {
           border: Border(top: BorderSide(color: GawenColors.border, width: 1)),
         ),
         child: Row(
-          children: List.generate(paths.length, (index) {
-            final isSelected = selectedIndex == index;
+          children: List.generate(items.length, (index) {
+            final item = items[index];
+            final isSelected = selectedPath == item.path;
 
             return Expanded(
               child: Padding(
@@ -63,7 +64,7 @@ class MainNavigation extends StatelessWidget {
                     borderRadius: BorderRadius.circular(16),
                     onTap: () {
                       if (!isSelected) {
-                        context.pushReplacement(paths[index]);
+                        context.pushReplacement(item.path);
                       }
                     },
                     child: Padding(
@@ -72,14 +73,14 @@ class MainNavigation extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            icons[index],
+                            item.icon,
                             color: isSelected
                                 ? GawenColors.primary
                                 : const Color(0xFF68756C),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            labels[index],
+                            item.label,
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: isSelected

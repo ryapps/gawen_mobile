@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-import '../../../core/router/route_names.dart';
-import '../../../core/theme/app_theme.dart';
-import '../../auth/presentation/bloc/auth_bloc.dart';
-import '../widgets/main_navigation.dart';
+import 'package:frontend/core/router/route_names.dart';
+import 'package:frontend/core/theme/app_theme.dart';
+import 'package:frontend/modules/auth/presentation/bloc/auth_bloc.dart';
+import 'package:frontend/core/widgets/main_navigation.dart';
 
 class SchedulePage extends StatelessWidget {
   const SchedulePage({super.key});

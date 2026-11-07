@@ -5,11 +5,11 @@ import 'package:frontend/core/router/route_names.dart';
 import 'package:frontend/core/theme/app_theme.dart';
 import 'package:frontend/core/widgets/gawen_widgets.dart';
 import 'package:frontend/modules/auth/presentation/bloc/auth_bloc.dart';
-import 'package:frontend/modules/employees/presentation/bloc/employee_bloc.dart';
-import 'package:frontend/modules/employees/domain/entities/join_request_entity.dart';
-import 'package:frontend/modules/employees/domain/entities/membership_entity.dart';
+import 'package:frontend/modules/employee/presentation/bloc/employee_bloc.dart';
+import 'package:frontend/modules/employee/domain/entities/join_request_entity.dart';
+import 'package:frontend/modules/employee/domain/entities/membership_entity.dart';
 import 'package:frontend/modules/invitation/domain/entities/invitation_entity.dart';
-import 'package:frontend/modules/home/widgets/main_navigation.dart';
+import 'package:frontend/core/widgets/main_navigation.dart';
 import 'package:go_router/go_router.dart';
 
 class EmployeesPage extends StatefulWidget {

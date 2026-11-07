@@ -1,7 +1,7 @@
 import '../../domain/entities/membership_access.dart';
 import '../../domain/entities/user_entity.dart';
-import '../../../employees/domain/entities/join_request_entity.dart';
-import '../../../employees/domain/entities/membership_entity.dart';
+import '../../../employee/domain/entities/join_request_entity.dart';
+import '../../../employee/domain/entities/membership_entity.dart';
 
 export '../../domain/entities/membership_access.dart';
 
