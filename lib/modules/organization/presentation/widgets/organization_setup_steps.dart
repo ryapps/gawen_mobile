@@ -436,6 +436,7 @@ class BusinessInformationStep extends StatelessWidget {
             ),
             DropdownMenu<OrganizationBusinessType>(
               width: MediaQuery.sizeOf(context).width - 48,
+              initialSelection: businessType,
               inputDecorationTheme: const InputDecorationTheme(
                 contentPadding: EdgeInsets.fromLTRB(12, 12, 12, 12),
                 border: OutlineInputBorder(

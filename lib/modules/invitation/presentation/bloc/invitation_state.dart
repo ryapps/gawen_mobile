@@ -1,4 +1,4 @@
-import '../../../employees/domain/entities/join_request_entity.dart';
+import '../../../employee/domain/entities/join_request_entity.dart';
 
 enum InvitationStatus { initial, loading, ready, submitted, accepted, failure }
 

@@ -2,14 +2,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend/core/widgets/app_bar.dart';
-import 'package:frontend/modules/home/widgets/more_menu.dart';
+import 'package:frontend/modules/more/presentation/widgets/more_menu.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/router/route_names.dart';
-import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/gawen_image.dart';
-import '../../auth/presentation/bloc/auth_bloc.dart';
-import '../widgets/main_navigation.dart';
+import '../../../../core/router/route_names.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/gawen_image.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../../core/widgets/main_navigation.dart';
 
 class MorePage extends StatelessWidget {
   const MorePage({super.key});

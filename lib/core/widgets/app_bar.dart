@@ -4,12 +4,12 @@ import 'package:frontend/core/theme/app_theme.dart';
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   const CustomAppBar({
     required this.title,
-    required this.subtitle,
+    this.subtitle,
     this.action,
   });
 
   final String title;
-  final String subtitle;
+  final String? subtitle;
   final Widget? action;
 
   @override
@@ -27,8 +27,9 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
             children: [
               Text(title, style: TextStyle(fontWeight: FontWeight.w900)),
               SizedBox(height: 4),
+              if (subtitle != null)
               Text(
-                subtitle,
+                subtitle ?? '',
                 style: const TextStyle(fontSize: 12, color: GawenColors.muted),
               ),
             ],

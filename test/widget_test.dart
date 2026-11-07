@@ -8,13 +8,15 @@ import 'package:frontend/core/theme/app_theme.dart';
 import 'package:frontend/modules/auth/presentation/bloc/auth_bloc.dart';
 import 'package:frontend/modules/auth/data/auth_repository.dart';
 import 'package:frontend/modules/auth/domain/entities/user_entity.dart';
-import 'package:frontend/modules/employees/domain/entities/membership_entity.dart';
+import 'package:frontend/modules/employee/domain/entities/membership_entity.dart';
 import 'package:frontend/modules/organization/domain/entities/organization_business_type.dart';
 import 'package:frontend/modules/organization/domain/entities/organization_entity.dart';
+import 'package:frontend/modules/organization/presentation/widgets/organization_setup_steps.dart';
 import 'package:frontend/modules/auth/presentation/pages/login_page.dart';
 import 'package:frontend/modules/auth/presentation/pages/onboarding/onboarding_page.dart';
 import 'package:frontend/modules/auth/presentation/pages/welcome_page.dart';
 import 'package:frontend/modules/auth/presentation/validators/password_validator.dart';
+import 'package:frontend/core/widgets/main_navigation.dart';
 
 const _employeeUser = UserEntity(
   id: 'employee',
@@ -93,6 +95,61 @@ void main() {
     await tester.pump();
     expect(find.text('Masuk sebagai Pemilik'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('main navigation only shows employee management to owners', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          bottomNavigationBar: MainNavigation(
+            isOwner: false,
+            currentPath: AppRoutes.home,
+          ),
+        ),
+      ),
+    );
+    expect(find.text('Karyawan'), findsNothing);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          bottomNavigationBar: MainNavigation(
+            isOwner: true,
+            currentPath: AppRoutes.home,
+          ),
+        ),
+      ),
+    );
+    expect(find.text('Karyawan'), findsOneWidget);
+  });
+
+  testWidgets('organization business type dropdown shows loaded selection', (
+    tester,
+  ) async {
+    final name = TextEditingController(text: 'South Club');
+    final description = TextEditingController();
+    addTearDown(name.dispose);
+    addTearDown(description.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light,
+        home: Scaffold(
+          body: BusinessInformationStep(
+            name: name,
+            businessType: OrganizationBusinessType.foodAndBeverage,
+            onBusinessTypeChanged: (_) {},
+            description: description,
+            nameValidator: (_) => null,
+            businessTypeValidator: (_) => null,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Makanan & Minuman'), findsNWidgets(2));
   });
 
   test('new password validation uses the shared eight-character rule', () {

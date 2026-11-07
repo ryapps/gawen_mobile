@@ -6,8 +6,9 @@ import 'package:frontend/modules/invitation/presentation/pages/join_organization
 import 'package:frontend/modules/invitation/presentation/pages/join_request_page.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../modules/invitation/presentation/pages/pending_approval_page.dart';
 import '../../modules/auth/presentation/bloc/auth_bloc.dart';
-import '../../modules/home/pages/home_page.dart';
+import '../../modules/home/presentation/pages/home_page.dart';
 import '../../modules/auth/presentation/pages/edit_profile_page.dart';
 import '../../modules/auth/presentation/pages/login_page.dart';
 import '../../modules/auth/presentation/pages/login_mode.dart';
@@ -15,13 +16,11 @@ import '../../modules/auth/presentation/pages/onboarding/onboarding_page.dart';
 import '../../modules/auth/presentation/pages/registration_page.dart';
 import '../../modules/auth/presentation/pages/onboarding/splash_page.dart';
 import '../../modules/auth/presentation/pages/welcome_page.dart';
-import '../../modules/employees/presentation/pages/employees_page.dart';
-import '../../modules/home/pages/more_page.dart';
-import '../../modules/home/pages/pending_approval_page.dart';
-import '../../modules/home/pages/permission_page.dart';
-import '../../modules/home/pages/schedule_page.dart';
+import '../../modules/employee/presentation/pages/employees_page.dart';
+import '../../modules/more/presentation/pages/more_page.dart';
+import '../../modules/home/presentation/pages/permission_page.dart';
+import '../../modules/schedule/presentation/pages/schedule_page.dart';
 import '../../modules/organization/presentation/pages/edit_organization_page.dart';
-import '../../modules/organization/presentation/pages/organization_page.dart';
 import 'route_names.dart';
 
 class AuthRouterRefresh extends ChangeNotifier {
@@ -271,11 +270,6 @@ GoRouter createAppRouter(AuthBloc authBloc, AuthRouterRefresh refresh) =>
           path: AppRoutes.inviteEmployee,
           name: 'invite-employee',
           builder: (context, state) => const InviteEmployeePage(),
-        ),
-        GoRoute(
-          path: AppRoutes.organization,
-          name: 'organization',
-          builder: (context, state) => const OrganizationPage(),
         ),
         GoRoute(
           path: AppRoutes.organizationSetup,
