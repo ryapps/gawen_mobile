@@ -1,53 +1,44 @@
+import '../../domain/entities/employee_entity.dart';
+
 sealed class EmployeeEvent {
   const EmployeeEvent();
 }
 
-final class EmployeeDataRequested extends EmployeeEvent {
-  const EmployeeDataRequested(this.organizationId);
+final class ManagedEmployeesRequested extends EmployeeEvent {
+  const ManagedEmployeesRequested({this.search = '', this.status});
 
-  final String organizationId;
+  final String search;
+  final EmployeeEmploymentStatus? status;
 }
 
-final class EmployeeDetailRequested extends EmployeeEvent {
-  const EmployeeDetailRequested({
-    required this.organizationId,
-    required this.membershipId,
-  });
-
-  final String organizationId;
-  final String membershipId;
+final class ManagedEmployeesLoadMoreRequested extends EmployeeEvent {
+  const ManagedEmployeesLoadMoreRequested();
 }
 
-final class EmployeeInvitationRequested extends EmployeeEvent {
-  const EmployeeInvitationRequested({
-    required this.organizationId,
-    required this.email,
-  });
+final class ManagedEmployeeDetailRequested extends EmployeeEvent {
+  const ManagedEmployeeDetailRequested(this.employeeId);
 
-  final String organizationId;
-  final String email;
+  final String employeeId;
 }
 
-final class EmployeeInvitationRevocationRequested extends EmployeeEvent {
-  const EmployeeInvitationRevocationRequested({
-    required this.organizationId,
-    required this.invitationId,
+final class ManagedEmployeePositionUpdateRequested extends EmployeeEvent {
+  const ManagedEmployeePositionUpdateRequested({
+    required this.employeeId,
+    required this.position,
   });
 
-  final String organizationId;
-  final String invitationId;
+  final String employeeId;
+  final String? position;
 }
 
-final class JoinRequestDecisionRequested extends EmployeeEvent {
-  const JoinRequestDecisionRequested({
-    required this.organizationId,
-    required this.requestId,
-    required this.approve,
+final class ManagedEmployeeStatusUpdateRequested extends EmployeeEvent {
+  const ManagedEmployeeStatusUpdateRequested({
+    required this.employeeId,
+    required this.status,
   });
 
-  final String organizationId;
-  final String requestId;
-  final bool approve;
+  final String employeeId;
+  final EmployeeEmploymentStatus status;
 }
 
 final class EmployeeStateResetRequested extends EmployeeEvent {

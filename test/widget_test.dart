@@ -274,7 +274,52 @@ void main() {
     );
     expect(
       resolveAuthRedirect(
+        location: AppRoutes.ownerJoinRequests,
+        auth: const AuthState(
+          status: AuthStatus.authenticated,
+          user: _employeeUser,
+          membershipAccess: MembershipAccess.active,
+        ),
+      ),
+      AppRoutes.permission,
+    );
+    expect(
+      resolveAuthRedirect(
+        location: '/employees/employee-1',
+        auth: const AuthState(
+          status: AuthStatus.authenticated,
+          user: _employeeUser,
+          membershipAccess: MembershipAccess.active,
+        ),
+      ),
+      AppRoutes.permission,
+    );
+    expect(
+      resolveAuthRedirect(
+        location: '/employees/employee-1/edit',
+        auth: const AuthState(
+          status: AuthStatus.authenticated,
+          user: _employeeUser,
+          membershipAccess: MembershipAccess.active,
+        ),
+      ),
+      AppRoutes.permission,
+    );
+    expect(
+      resolveAuthRedirect(
         location: AppRoutes.employees,
+        auth: AuthState(
+          status: AuthStatus.authenticated,
+          user: _ownerUser,
+          memberships: [_ownerMembership],
+          membershipAccess: MembershipAccess.active,
+        ),
+      ),
+      isNull,
+    );
+    expect(
+      resolveAuthRedirect(
+        location: AppRoutes.ownerJoinRequests,
         auth: AuthState(
           status: AuthStatus.authenticated,
           user: _ownerUser,

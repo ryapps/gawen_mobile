@@ -1,4 +1,6 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_failure.dart';
@@ -7,9 +9,46 @@ import '../domain/entities/organization_business_type.dart';
 import 'models/organization_model.dart';
 
 class OrganizationRepository {
-  OrganizationRepository({Dio? client}) : _client = client ?? ApiClient.dio;
+  OrganizationRepository({Dio? client, FlutterSecureStorage? storage})
+    : _client = client ?? ApiClient.dio,
+      _storage = storage ?? const FlutterSecureStorage();
 
   final Dio _client;
+  final FlutterSecureStorage _storage;
+
+  String _businessCodeStorageKey(String organizationId) =>
+      'organization_business_join_code_$organizationId';
+
+  Future<String?> getSavedBusinessJoinCode(String organizationId) async {
+    try {
+      return await _storage.read(key: _businessCodeStorageKey(organizationId));
+    } on PlatformException {
+      throw const ApiFailure(
+        'Kode bergabung tidak dapat dimuat dari perangkat.',
+      );
+    }
+  }
+
+  Future<({String code, bool stored})> rotateBusinessJoinCode(
+    String organizationId,
+  ) => executeApiRequest(() async {
+    final response = await _client.post<Map<String, dynamic>>(
+      '/api/employees/organizations/$organizationId/business-code/rotate',
+    );
+    final code = response.data?['data']?['businessCode'];
+    if (code is! String || !RegExp(r'^[A-Z0-9]{8}$').hasMatch(code)) {
+      throw const ApiFailure('Respons kode bergabung tidak valid.');
+    }
+    try {
+      await _storage.write(
+        key: _businessCodeStorageKey(organizationId),
+        value: code,
+      );
+      return (code: code, stored: true);
+    } on PlatformException {
+      return (code: code, stored: false);
+    }
+  });
 
   Future<OrganizationEntity> getOrganization(String organizationId) =>
       executeApiRequest(() async {
@@ -21,6 +60,7 @@ class OrganizationRepository {
             organization['organization'] is! Map<String, dynamic>) {
           throw const ApiFailure('Respons informasi usaha tidak valid.');
         }
+
         return OrganizationModel.fromJson(
           organization['organization'] as Map<String, dynamic>,
         );
@@ -65,6 +105,7 @@ class OrganizationRepository {
         data['organization'] is! Map<String, dynamic>) {
       throw const ApiFailure('Respons perubahan usaha tidak valid.');
     }
+
     return OrganizationModel.fromJson(
       data['organization'] as Map<String, dynamic>,
     );

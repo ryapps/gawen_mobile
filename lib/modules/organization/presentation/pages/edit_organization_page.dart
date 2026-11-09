@@ -190,7 +190,7 @@ class _EditOrganizationPageState extends State<EditOrganizationPage> {
     return Scaffold(
       appBar: widget.isSetup
           ? null
-          : CustomAppBar(title: 'Pengaturan Perusahaan',),
+          : CustomAppBar(title: 'Pengaturan Perusahaan', isLeadingEnabled: true),
       body: SafeArea(
         child: _loading
             ? const Center(child: CircularProgressIndicator())

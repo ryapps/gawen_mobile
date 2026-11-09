@@ -48,6 +48,18 @@ final class OrganizationStateResetRequested extends OrganizationEvent {
   const OrganizationStateResetRequested();
 }
 
+final class BusinessJoinCodeRequested extends OrganizationEvent {
+  const BusinessJoinCodeRequested(this.organizationId);
+
+  final String organizationId;
+}
+
+final class BusinessJoinCodeRotationRequested extends OrganizationEvent {
+  const BusinessJoinCodeRotationRequested(this.organizationId);
+
+  final String organizationId;
+}
+
 final class OrganizationSetupCompletionRequested extends OrganizationEvent {
   const OrganizationSetupCompletionRequested(this.organizationId);
 

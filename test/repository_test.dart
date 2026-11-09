@@ -2,14 +2,116 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:frontend/core/network/api_failure.dart';
 import 'package:frontend/modules/employee/data/employee_repository.dart';
-import 'package:frontend/modules/employee/domain/entities/membership_entity.dart';
+import 'package:frontend/modules/employee/domain/entities/employee_entity.dart';
 import 'package:frontend/modules/invitation/data/invitation_repository.dart';
 import 'package:frontend/modules/organization/data/organization_repository.dart';
 import 'package:frontend/modules/regions/data/region_repository.dart';
 
 void main() {
+  test(
+    'managed employee repository sends filters and parses pagination',
+    () async {
+      RequestOptions? request;
+      final repository = EmployeeRepository(
+        client: _client((options) {
+          request = options;
+          return {
+            'status': 'ok',
+            'data': {
+              'employees': [
+                {
+                  'id': 'employee-1',
+                  'name': 'Ayu',
+                  'photoProfile': null,
+                  'email': 'ayu@example.com',
+                  'phone': '+628123456789',
+                  'position': 'Kasir',
+                  'status': 'ACTIVE',
+                  'joinedAt': '2026-10-01T10:00:00.000Z',
+                },
+              ],
+              'pagination': {
+                'page': 2,
+                'limit': 10,
+                'total': 11,
+                'totalPages': 2,
+              },
+            },
+          };
+        }),
+      );
+
+      final result = await repository.getManagedEmployees(
+        page: 2,
+        limit: 10,
+        search: 'Ayu',
+        status: EmployeeEmploymentStatus.active,
+      );
+
+      expect(request?.path, '/api/employees');
+      expect(request?.queryParameters, {
+        'page': 2,
+        'limit': 10,
+        'search': 'Ayu',
+        'status': 'ACTIVE',
+      });
+      expect(result.employees.single.name, 'Ayu');
+      expect(result.employees.single.position, 'Kasir');
+      expect(
+        result.employees.single.joinedAt,
+        DateTime.parse('2026-10-01T10:00:00.000Z'),
+      );
+      expect(result.pagination.hasNextPage, isFalse);
+    },
+  );
+
+  test(
+    'managed employee repository maps detail and update responses',
+    () async {
+      final paths = <String>[];
+      final repository = EmployeeRepository(
+        client: _client((options) {
+          paths.add(options.path);
+          final statusUpdate = options.path.endsWith('/status');
+          return {
+            'status': 'ok',
+            'data': {
+              'employee': {
+                'id': 'employee-1',
+                'name': 'Ayu',
+                'position': statusUpdate ? 'Kasir' : 'Supervisor',
+                'status': statusUpdate ? 'INACTIVE' : 'ACTIVE',
+                'joinedAt': '2026-10-01T10:00:00.000Z',
+              },
+            },
+          };
+        }),
+      );
+
+      final detail = await repository.getManagedEmployee('employee-1');
+      final updatedPosition = await repository.updateManagedEmployee(
+        employeeId: 'employee-1',
+        position: 'Supervisor',
+      );
+      final updatedStatus = await repository.updateManagedEmployeeStatus(
+        employeeId: 'employee-1',
+        status: EmployeeEmploymentStatus.inactive,
+      );
+
+      expect(paths, [
+        '/api/employees/employee-1',
+        '/api/employees/employee-1',
+        '/api/employees/employee-1/status',
+      ]);
+      expect(detail.name, 'Ayu');
+      expect(updatedPosition.position, 'Supervisor');
+      expect(updatedStatus.status, EmployeeEmploymentStatus.inactive);
+    },
+  );
+
   test(
     'region repository loads and caches hierarchical API responses',
     () async {
@@ -136,6 +238,37 @@ void main() {
     expect(organization.memberCount, 4);
   });
 
+  test(
+    'organization repository rotates and securely caches join codes',
+    () async {
+      RequestOptions? request;
+      final storage = _MemorySecureStorage();
+      final repository = OrganizationRepository(
+        client: _client((options) {
+          request = options;
+          return {
+            'status': 'ok',
+            'data': {'businessCode': 'GAWEN123'},
+          };
+        }),
+        storage: storage,
+      );
+
+      final result = await repository.rotateBusinessJoinCode('organization-1');
+      final cachedCode = await repository.getSavedBusinessJoinCode(
+        'organization-1',
+      );
+
+      expect(
+        request?.path,
+        '/api/employees/organizations/organization-1/business-code/rotate',
+      );
+      expect(result.code, 'GAWEN123');
+      expect(result.stored, isTrue);
+      expect(cachedCode, 'GAWEN123');
+    },
+  );
+
   test('organization repository uploads logo as multipart image', () async {
     final directory = await Directory.systemTemp.createTemp('gawen-logo-test');
     final image = File('${directory.path}\\logo.jpg');
@@ -172,30 +305,10 @@ void main() {
   });
 
   test(
-    'employee repository maps membership and one-time invite payload',
+    'invitation repository manages owner requests and email invitations',
     () async {
-      final repository = EmployeeRepository(
+      final repository = InvitationRepository(
         client: _client((options) {
-          if (options.path.endsWith('/members')) {
-            return {
-              'status': 'ok',
-              'data': {
-                'members': [
-                  {
-                    'id': 'membership-1',
-                    'role': 'EMPLOYEE',
-                    'createdAt': '2026-10-01T10:00:00.000Z',
-                    'user': {
-                      'id': 'user-1',
-                      'name': 'Ayu',
-                      'email': 'ayu@example.com',
-                      'phone': null,
-                    },
-                  },
-                ],
-              },
-            };
-          }
           if (options.path.endsWith('/join-requests')) {
             return {
               'status': 'ok',
@@ -203,6 +316,7 @@ void main() {
                 'requests': [
                   {
                     'id': 'request-1',
+                    'status': 'PENDING',
                     'createdAt': '2026-10-01T10:00:00.000Z',
                     'user': {
                       'id': 'user-2',
@@ -214,34 +328,42 @@ void main() {
               },
             };
           }
-          return {
-            'status': 'ok',
-            'data': {
-              'invitation': {
-                'id': 'invitation-1',
-                'email': 'ayu@example.com',
-                'expiresAt': '2026-10-08T10:00:00.000Z',
-                'createdAt': '2026-10-01T10:00:00.000Z',
-                'token': 'one-time-token',
+          if (options.path.endsWith('/invitations')) {
+            expect(options.method, 'POST');
+            expect(options.data, {'email': 'ayu@example.com'});
+            return {
+              'status': 'ok',
+              'data': {
+                'invitation': {
+                  'id': 'invitation-1',
+                  'email': 'ayu@example.com',
+                  'expiresAt': '2026-10-08T10:00:00.000Z',
+                  'createdAt': '2026-10-01T10:00:00.000Z',
+                  'token': 'one-time-token',
+                },
               },
-            },
-          };
+            };
+          }
+          return {'status': 'ok', 'data': {}};
         }),
       );
 
-      final members = await repository.getMembers('organization-1');
-      final pendingRequests = await repository.getPendingRequests(
-        'organization-1',
+      final pending = await repository.getOwnerRequests('organization-1');
+      await repository.decideOwnerRequest(
+        organizationId: 'organization-1',
+        requestId: 'request-1',
+        approve: true,
       );
-      final invitation = await repository.createInvitation(
+      final invitation = await repository.createEmailInvitation(
         organizationId: 'organization-1',
         email: 'ayu@example.com',
       );
+      await repository.revokeEmailInvitation(
+        organizationId: 'organization-1',
+        invitationId: invitation.invitation.id,
+      );
 
-      expect(members.single.role, MembershipRole.employee);
-      expect(members.single.user?.phone, isNull);
-      expect(pendingRequests.single.status, isNull);
-      expect(pendingRequests.single.user?.name, 'Budi');
+      expect(pending.single.user?.name, 'Budi');
       expect(invitation.invitation.id, 'invitation-1');
       expect(invitation.token, 'one-time-token');
     },
@@ -299,4 +421,37 @@ Dio _client(Map<String, dynamic> Function(RequestOptions) responseFor) {
     ),
   );
   return client;
+}
+
+class _MemorySecureStorage extends FlutterSecureStorage {
+  final _values = <String, String>{};
+
+  @override
+  Future<String?> read({
+    required String key,
+    AppleOptions? iOptions,
+    AndroidOptions? aOptions,
+    LinuxOptions? lOptions,
+    WebOptions? webOptions,
+    AppleOptions? mOptions,
+    WindowsOptions? wOptions,
+  }) async => _values[key];
+
+  @override
+  Future<void> write({
+    required String key,
+    required String? value,
+    AppleOptions? iOptions,
+    AndroidOptions? aOptions,
+    LinuxOptions? lOptions,
+    WebOptions? webOptions,
+    AppleOptions? mOptions,
+    WindowsOptions? wOptions,
+  }) async {
+    if (value == null) {
+      _values.remove(key);
+    } else {
+      _values[key] = value;
+    }
+  }
 }

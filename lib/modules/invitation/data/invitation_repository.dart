@@ -2,8 +2,10 @@ import 'package:dio/dio.dart';
 
 import '../../../core/network/api_failure.dart';
 import '../../../core/network/api_client.dart';
-import '../../employee/data/models/join_request_model.dart';
-import '../../employee/domain/entities/join_request_entity.dart';
+import '../domain/entities/invitation_entity.dart';
+import '../domain/entities/join_request_entity.dart';
+import 'models/invitation_model.dart';
+import 'models/join_request_model.dart';
 
 class InvitationRepository {
   InvitationRepository({Dio? client}) : _client = client ?? ApiClient.dio;
@@ -42,6 +44,63 @@ class InvitationRepository {
           .toList(growable: false);
     },
   );
+
+  Future<List<JoinRequestEntity>> getOwnerRequests(String organizationId) =>
+      executeApiRequest(() async {
+        final response = await _client.get<Map<String, dynamic>>(
+          '/api/employees/organizations/$organizationId/join-requests',
+        );
+        final data = response.data?['data'];
+        if (data is! Map<String, dynamic> || data['requests'] is! List) {
+          throw const ApiFailure('Respons permintaan karyawan tidak valid.');
+        }
+        final entries = data['requests'] as List;
+        if (entries.any((entry) => entry is! Map<String, dynamic>)) {
+          throw const ApiFailure('Data permintaan karyawan tidak valid.');
+        }
+        return entries
+            .cast<Map<String, dynamic>>()
+            .map(JoinRequestModel.fromJson)
+            .toList(growable: false);
+      });
+
+  Future<void> decideOwnerRequest({
+    required String organizationId,
+    required String requestId,
+    required bool approve,
+  }) => executeApiRequest(() async {
+    await _client.post<Map<String, dynamic>>(
+      '/api/employees/organizations/$organizationId/join-requests/$requestId/${approve ? 'approve' : 'reject'}',
+    );
+  });
+
+  Future<CreatedInvitation> createEmailInvitation({
+    required String organizationId,
+    required String email,
+  }) => executeApiRequest(() async {
+    final response = await _client.post<Map<String, dynamic>>(
+      '/api/employees/organizations/$organizationId/invitations',
+      data: {'email': email.trim()},
+    );
+    final data = response.data?['data'];
+    if (data is! Map<String, dynamic> ||
+        data['invitation'] is! Map<String, dynamic>) {
+      throw const ApiFailure('Respons undangan tidak valid.');
+    }
+    final model = CreatedInvitationModel.fromJson(
+      data['invitation'] as Map<String, dynamic>,
+    );
+    return CreatedInvitation(invitation: model.invitation, token: model.token);
+  });
+
+  Future<void> revokeEmailInvitation({
+    required String organizationId,
+    required String invitationId,
+  }) => executeApiRequest(() async {
+    await _client.post<Map<String, dynamic>>(
+      '/api/employees/organizations/$organizationId/invitations/$invitationId/revoke',
+    );
+  });
 
   Future<void> acceptInvitation(String token) => executeApiRequest(() async {
     await _client.post<Map<String, dynamic>>(

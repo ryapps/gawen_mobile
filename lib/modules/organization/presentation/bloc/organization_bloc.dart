@@ -14,6 +14,8 @@ class OrganizationBloc extends Bloc<OrganizationEvent, OrganizationState> {
       emit(const OrganizationState());
     });
     on<OrganizationLoadRequested>(_load);
+    on<BusinessJoinCodeRequested>(_loadBusinessJoinCode);
+    on<BusinessJoinCodeRotationRequested>(_rotateBusinessJoinCode);
     on<OrganizationUpdateRequested>(_update);
     on<OrganizationLogoUploadRequested>(_uploadLogo);
     on<OrganizationSetupCompletionRequested>(_completeSetup);
@@ -21,6 +23,75 @@ class OrganizationBloc extends Bloc<OrganizationEvent, OrganizationState> {
   }
 
   final OrganizationRepository _repository;
+
+  Future<void> _loadBusinessJoinCode(
+    BusinessJoinCodeRequested event,
+    Emitter<OrganizationState> emit,
+  ) async {
+    emit(
+      state.copyWith(
+        businessJoinCodeStatus: BusinessJoinCodeStatus.loading,
+        businessJoinCodeOrganizationId: event.organizationId,
+        businessJoinCodeMessage: null,
+        clearBusinessJoinCode: true,
+      ),
+    );
+    try {
+      final code = await _repository.getSavedBusinessJoinCode(
+        event.organizationId,
+      );
+      emit(
+        state.copyWith(
+          businessJoinCodeStatus: BusinessJoinCodeStatus.ready,
+          businessJoinCode: code,
+          businessJoinCodeOrganizationId: event.organizationId,
+        ),
+      );
+    } on ApiFailure catch (error) {
+      emit(
+        state.copyWith(
+          businessJoinCodeStatus: BusinessJoinCodeStatus.failure,
+          businessJoinCodeMessage: error.message,
+        ),
+      );
+    }
+  }
+
+  Future<void> _rotateBusinessJoinCode(
+    BusinessJoinCodeRotationRequested event,
+    Emitter<OrganizationState> emit,
+  ) async {
+    if (state.businessJoinCodeStatus == BusinessJoinCodeStatus.rotating) return;
+    emit(
+      state.copyWith(
+        businessJoinCodeStatus: BusinessJoinCodeStatus.rotating,
+        businessJoinCodeOrganizationId: event.organizationId,
+        businessJoinCodeMessage: null,
+      ),
+    );
+    try {
+      final result = await _repository.rotateBusinessJoinCode(
+        event.organizationId,
+      );
+      emit(
+        state.copyWith(
+          businessJoinCodeStatus: BusinessJoinCodeStatus.ready,
+          businessJoinCode: result.code,
+          businessJoinCodeOrganizationId: event.organizationId,
+          businessJoinCodeMessage: result.stored
+              ? 'Kode bergabung berhasil diperbarui.'
+              : 'Kode berhasil dibuat. Salin sekarang karena perangkat tidak dapat menyimpannya.',
+        ),
+      );
+    } on ApiFailure catch (error) {
+      emit(
+        state.copyWith(
+          businessJoinCodeStatus: BusinessJoinCodeStatus.failure,
+          businessJoinCodeMessage: error.message,
+        ),
+      );
+    }
+  }
 
   Future<void> _uploadLogo(
     OrganizationLogoUploadRequested event,

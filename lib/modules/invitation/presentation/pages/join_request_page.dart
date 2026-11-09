@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/widgets/gawen_widgets.dart';
-import '../../../employee/domain/entities/join_request_entity.dart';
+import '../../domain/entities/join_request_entity.dart';
 import '../bloc/invitation_bloc.dart';
 
 class JoinRequestsPage extends StatefulWidget {

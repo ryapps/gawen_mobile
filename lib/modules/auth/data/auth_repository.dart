@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
 
-import '../../employee/data/models/join_request_model.dart';
+import '../../invitation/data/models/join_request_model.dart';
 import '../../employee/data/models/membership_model.dart';
-import '../../employee/domain/entities/join_request_entity.dart';
+import '../../invitation/domain/entities/join_request_entity.dart';
 import '../../employee/domain/entities/membership_entity.dart';
 import '../domain/entities/membership_access.dart';
 import '../../../core/network/api_failure.dart';

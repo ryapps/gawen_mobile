@@ -6,10 +6,10 @@ import '../../../../core/router/route_names.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/gawen_widgets.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
-import '../../../employee/presentation/bloc/employee_bloc.dart';
 import '../../../organization/presentation/bloc/organization_bloc.dart';
 import '../widgets/home_action_card.dart';
 import '../../../../core/widgets/main_navigation.dart';
+import '../../../invitation/presentation/bloc/invitation_bloc.dart';
 
 class OwnerHomePage extends StatefulWidget {
   const OwnerHomePage({super.key});
@@ -20,7 +20,7 @@ class OwnerHomePage extends StatefulWidget {
 
 class _OwnerHomePageState extends State<OwnerHomePage> {
   String? _loadedOrganizationId;
-  String? _loadedEmployeeOrganizationId;
+  String? _loadedRequestsOrganizationId;
 
   @override
   Widget build(BuildContext context) {
@@ -37,12 +37,12 @@ class _OwnerHomePageState extends State<OwnerHomePage> {
       });
     }
     if (organizationId != null &&
-        organizationId != _loadedEmployeeOrganizationId) {
-      _loadedEmployeeOrganizationId = organizationId;
+        organizationId != _loadedRequestsOrganizationId) {
+      _loadedRequestsOrganizationId = organizationId;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          context.read<EmployeeBloc>().add(
-            EmployeeDataRequested(organizationId),
+          context.read<InvitationBloc>().add(
+            OwnerJoinRequestsRefreshRequested(organizationId),
           );
         }
       });
@@ -98,12 +98,16 @@ class _OwnerHomePageState extends State<OwnerHomePage> {
               },
             ),
             const SizedBox(height: 12),
-            BlocBuilder<EmployeeBloc, EmployeeState>(
-              builder: (context, employeeState) => _PendingSummary(
-                count: employeeState.pendingRequests.length,
-                loading: employeeState.status == EmployeeStatus.loading,
-                failed: employeeState.status == EmployeeStatus.failure,
-                onTap: () => context.go(AppRoutes.employees),
+            BlocBuilder<InvitationBloc, InvitationState>(
+              builder: (context, invitationState) => _PendingSummary(
+                count: invitationState.ownerRequests.length,
+                loading:
+                    invitationState.ownerRequestsStatus ==
+                    OwnerJoinRequestsStatus.loading,
+                failed:
+                    invitationState.ownerRequestsStatus ==
+                    OwnerJoinRequestsStatus.failure,
+                onTap: () => context.go(AppRoutes.inviteEmployee),
               ),
             ),
             const SizedBox(height: 22),
@@ -115,7 +119,7 @@ class _OwnerHomePageState extends State<OwnerHomePage> {
             HomeActionCard(
               icon: Icons.groups_outlined,
               title: 'Karyawan',
-              subtitle: 'Kelola anggota dan permintaan bergabung',
+              subtitle: 'Kelola anggota tim',
               onTap: () => context.go(AppRoutes.employees),
             ),
             HomeActionCard(

@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:frontend/modules/invitation/presentation/pages/accept_invitation_page.dart';
 import 'package:frontend/modules/invitation/presentation/pages/join_organization_page.dart';
 import 'package:frontend/modules/invitation/presentation/pages/join_request_page.dart';
+import 'package:frontend/modules/invitation/domain/entities/join_request_entity.dart';
+import 'package:frontend/modules/invitation/presentation/pages/owner_join_requests_page.dart';
+import 'package:frontend/modules/invitation/presentation/pages/owner_join_request_detail_page.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../modules/invitation/presentation/pages/pending_approval_page.dart';
@@ -17,6 +20,9 @@ import '../../modules/auth/presentation/pages/registration_page.dart';
 import '../../modules/auth/presentation/pages/onboarding/splash_page.dart';
 import '../../modules/auth/presentation/pages/welcome_page.dart';
 import '../../modules/employee/presentation/pages/employees_page.dart';
+import '../../modules/invitation/presentation/pages/invite_employee_page.dart';
+import '../../modules/employee/presentation/pages/employee_detail_page.dart';
+import '../../modules/employee/presentation/pages/edit_employee_page.dart';
 import '../../modules/more/presentation/pages/more_page.dart';
 import '../../modules/home/presentation/pages/permission_page.dart';
 import '../../modules/schedule/presentation/pages/schedule_page.dart';
@@ -63,8 +69,8 @@ String? resolveAuthRedirect({
   };
   const ownerOnlyPaths = {
     AppRoutes.employees,
-    AppRoutes.employeeDetail,
     AppRoutes.inviteEmployee,
+    AppRoutes.ownerJoinRequests,
     AppRoutes.editOrganization,
   };
   final hasVerifiedSession = auth.hasVerifiedSession;
@@ -119,7 +125,12 @@ String? resolveAuthRedirect({
     };
   }
 
-  if (ownerOnlyPaths.contains(location) && !auth.isOwner) {
+  final isEmployeeManagementPath = _isEmployeeManagementPath(location);
+  final isOwnerJoinRequestPath = _isOwnerJoinRequestPath(location);
+  if ((ownerOnlyPaths.contains(location) ||
+          isEmployeeManagementPath ||
+          isOwnerJoinRequestPath) &&
+      !auth.isOwner) {
     return AppRoutes.permission;
   }
 
@@ -131,15 +142,17 @@ String? resolveAuthRedirect({
     AppRoutes.organization,
     AppRoutes.editOrganization,
     AppRoutes.employees,
-    AppRoutes.employeeDetail,
     AppRoutes.inviteEmployee,
+    AppRoutes.ownerJoinRequests,
     AppRoutes.schedule,
     AppRoutes.more,
     AppRoutes.editProfile,
     AppRoutes.team,
     AppRoutes.permission,
   };
-  if (activeAccessPaths.contains(location) &&
+  if ((activeAccessPaths.contains(location) ||
+          isEmployeeManagementPath ||
+          isOwnerJoinRequestPath) &&
       auth.membershipAccess != MembershipAccess.active) {
     return _landingPath(auth);
   }
@@ -161,6 +174,20 @@ String? resolveAuthRedirect({
   }
 
   return null;
+}
+
+bool _isEmployeeManagementPath(String location) {
+  final segments = Uri.parse(location).pathSegments;
+  return segments.length >= 2 &&
+      segments.first == 'employees' &&
+      segments[1] != 'invite';
+}
+
+bool _isOwnerJoinRequestPath(String location) {
+  final segments = Uri.parse(location).pathSegments;
+  return segments.length == 2 &&
+      segments.first == 'join-requests' &&
+      segments.last.isNotEmpty;
 }
 
 GoRouter createAppRouter(AuthBloc authBloc, AuthRouterRefresh refresh) =>
@@ -260,16 +287,37 @@ GoRouter createAppRouter(AuthBloc authBloc, AuthRouterRefresh refresh) =>
           builder: (context, state) => const EmployeesPage(),
         ),
         GoRoute(
-          path: AppRoutes.employeeDetail,
-          name: 'employee-detail',
-          builder: (context, state) => EmployeeDetailPage(
-            membershipId: state.extra is String ? state.extra! as String : '',
+          path: AppRoutes.ownerJoinRequests,
+          name: 'owner-join-requests',
+          builder: (context, state) => const OwnerJoinRequestsPage(),
+        ),
+        GoRoute(
+          path: AppRoutes.ownerJoinRequestDetail,
+          name: 'owner-join-request-detail',
+          builder: (context, state) => OwnerJoinRequestDetailPage(
+            requestId: state.pathParameters['requestId']!,
+            initialRequest: state.extra is JoinRequestEntity
+                ? state.extra! as JoinRequestEntity
+                : null,
           ),
         ),
         GoRoute(
           path: AppRoutes.inviteEmployee,
           name: 'invite-employee',
           builder: (context, state) => const InviteEmployeePage(),
+        ),
+        GoRoute(
+          path: AppRoutes.employeeEdit,
+          name: 'employee-edit',
+          builder: (context, state) =>
+              EditEmployeePage(employeeId: state.pathParameters['employeeId']!),
+        ),
+        GoRoute(
+          path: AppRoutes.employeeDetail,
+          name: 'employee-detail',
+          builder: (context, state) => EmployeeDetailPage(
+            employeeId: state.pathParameters['employeeId']!,
+          ),
         ),
         GoRoute(
           path: AppRoutes.organizationSetup,

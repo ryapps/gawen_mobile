@@ -2,106 +2,99 @@ import 'package:dio/dio.dart';
 
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_failure.dart';
-import '../../invitation/data/models/invitation_model.dart';
-import '../../invitation/domain/entities/invitation_entity.dart';
-import '../domain/entities/join_request_entity.dart';
-import '../domain/entities/membership_entity.dart';
-import 'models/join_request_model.dart';
-import 'models/membership_model.dart';
+import '../domain/entities/employee_entity.dart';
+import 'models/employee_model.dart';
 
 class EmployeeRepository {
   EmployeeRepository({Dio? client}) : _client = client ?? ApiClient.dio;
 
   final Dio _client;
 
-  Future<List<MembershipEntity>> getMembers(String organizationId) =>
-      executeApiRequest(() async {
-        final response = await _client.get<Map<String, dynamic>>(
-          '/api/employees/organizations/$organizationId/members',
-        );
-        final data = response.data?['data'];
-        if (data is! Map<String, dynamic> || data['members'] is! List) {
-          throw const ApiFailure('Respons daftar karyawan tidak valid.');
-        }
-        final members = data['members'] as List;
-        if (members.any((member) => member is! Map<String, dynamic>)) {
-          throw const ApiFailure('Data karyawan tidak valid.');
-        }
-        return members
-            .cast<Map<String, dynamic>>()
-            .map(MembershipModel.fromJson)
-            .toList(growable: false);
-      });
-
-  Future<MembershipEntity> getMember(
-    String organizationId,
-    String membershipId,
-  ) => executeApiRequest(() async {
+  Future<({List<EmployeeEntity> employees, EmployeePagination pagination})>
+  getManagedEmployees({
+    required int page,
+    required int limit,
+    String? search,
+    EmployeeEmploymentStatus? status,
+  }) => executeApiRequest(() async {
     final response = await _client.get<Map<String, dynamic>>(
-      '/api/employees/organizations/$organizationId/members/$membershipId',
+      '/api/employees',
+      queryParameters: {
+        'page': page,
+        'limit': limit,
+        if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
+        if (status != null)
+          'status': status == EmployeeEmploymentStatus.active
+              ? 'ACTIVE'
+              : 'INACTIVE',
+      },
     );
     final data = response.data?['data'];
     if (data is! Map<String, dynamic> ||
-        data['member'] is! Map<String, dynamic>) {
-      throw const ApiFailure('Respons detail karyawan tidak valid.');
+        data['employees'] is! List ||
+        data['pagination'] is! Map<String, dynamic>) {
+      throw const ApiFailure('Respons daftar karyawan tidak valid.');
     }
-    return MembershipModel.fromJson(data['member'] as Map<String, dynamic>);
+    final records = data['employees'] as List;
+    if (records.any((employee) => employee is! Map<String, dynamic>)) {
+      throw const ApiFailure('Data karyawan tidak valid.');
+    }
+    return (
+      employees: records
+          .cast<Map<String, dynamic>>()
+          .map(EmployeeModel.fromJson)
+          .toList(growable: false),
+      pagination: EmployeePaginationModel.fromJson(
+        data['pagination'] as Map<String, dynamic>,
+      ),
+    );
   });
 
-  Future<List<JoinRequestEntity>> getPendingRequests(String organizationId) =>
+  Future<EmployeeEntity> getManagedEmployee(String employeeId) =>
       executeApiRequest(() async {
         final response = await _client.get<Map<String, dynamic>>(
-          '/api/employees/organizations/$organizationId/join-requests',
+          '/api/employees/$employeeId',
         );
         final data = response.data?['data'];
-        if (data is! Map<String, dynamic> || data['requests'] is! List) {
-          throw const ApiFailure('Respons permintaan karyawan tidak valid.');
+        if (data is! Map<String, dynamic> ||
+            data['employee'] is! Map<String, dynamic>) {
+          throw const ApiFailure('Respons detail karyawan tidak valid.');
         }
-        final requests = data['requests'] as List;
-        if (requests.any((request) => request is! Map<String, dynamic>)) {
-          throw const ApiFailure('Data permintaan karyawan tidak valid.');
-        }
-        return requests
-            .cast<Map<String, dynamic>>()
-            .map(JoinRequestModel.fromJson)
-            .toList(growable: false);
+        return EmployeeModel.fromJson(data['employee'] as Map<String, dynamic>);
       });
 
-  Future<void> decideRequest({
-    required String organizationId,
-    required String requestId,
-    required bool approve,
+  Future<EmployeeEntity> updateManagedEmployee({
+    required String employeeId,
+    required String? position,
   }) => executeApiRequest(() async {
-    await _client.post<Map<String, dynamic>>(
-      '/api/employees/organizations/$organizationId/join-requests/$requestId/${approve ? 'approve' : 'reject'}',
+    final response = await _client.patch<Map<String, dynamic>>(
+      '/api/employees/$employeeId',
+      data: {'position': position?.trim()},
     );
+    return _managedEmployeeFromResponse(response.data);
   });
 
-  Future<CreatedInvitation> createInvitation({
-    required String organizationId,
-    required String email,
+  Future<EmployeeEntity> updateManagedEmployeeStatus({
+    required String employeeId,
+    required EmployeeEmploymentStatus status,
   }) => executeApiRequest(() async {
-    final response = await _client.post<Map<String, dynamic>>(
-      '/api/employees/organizations/$organizationId/invitations',
-      data: {'email': email.trim()},
+    final response = await _client.patch<Map<String, dynamic>>(
+      '/api/employees/$employeeId/status',
+      data: {
+        'status': status == EmployeeEmploymentStatus.active
+            ? 'ACTIVE'
+            : 'INACTIVE',
+      },
     );
-    final data = response.data?['data'];
+    return _managedEmployeeFromResponse(response.data);
+  });
+
+  EmployeeEntity _managedEmployeeFromResponse(Map<String, dynamic>? response) {
+    final data = response?['data'];
     if (data is! Map<String, dynamic> ||
-        data['invitation'] is! Map<String, dynamic>) {
-      throw const ApiFailure('Respons undangan tidak valid.');
+        data['employee'] is! Map<String, dynamic>) {
+      throw const ApiFailure('Respons perubahan karyawan tidak valid.');
     }
-    final model = CreatedInvitationModel.fromJson(
-      data['invitation'] as Map<String, dynamic>,
-    );
-    return CreatedInvitation(invitation: model.invitation, token: model.token);
-  });
-
-  Future<void> revokeInvitation({
-    required String organizationId,
-    required String invitationId,
-  }) => executeApiRequest(() async {
-    await _client.post<Map<String, dynamic>>(
-      '/api/employees/organizations/$organizationId/invitations/$invitationId/revoke',
-    );
-  });
+    return EmployeeModel.fromJson(data['employee'] as Map<String, dynamic>);
+  }
 }

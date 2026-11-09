@@ -70,6 +70,9 @@ class _GawenAppState extends State<GawenApp> {
           const OrganizationStateResetRequested(),
         );
         context.read<EmployeeBloc>().add(const EmployeeStateResetRequested());
+        context.read<InvitationBloc>().add(
+          const InvitationStateResetRequested(),
+        );
       },
       child: MaterialApp.router(
         title: 'Gawen',

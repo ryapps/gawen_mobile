@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/modules/auth/data/models/user_model.dart';
-import 'package:frontend/modules/employee/data/models/join_request_model.dart';
 import 'package:frontend/modules/employee/data/models/membership_model.dart';
-import 'package:frontend/modules/employee/domain/entities/join_request_entity.dart';
 import 'package:frontend/modules/employee/domain/entities/membership_entity.dart';
+import 'package:frontend/modules/invitation/data/models/join_request_model.dart';
+import 'package:frontend/modules/invitation/domain/entities/join_request_entity.dart';
 import 'package:frontend/modules/invitation/data/models/invitation_model.dart';
 import 'package:frontend/modules/organization/data/models/organization_model.dart';
 import 'package:frontend/modules/organization/domain/entities/organization_business_type.dart';
