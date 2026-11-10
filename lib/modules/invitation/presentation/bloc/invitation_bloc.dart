@@ -33,8 +33,16 @@ class InvitationBloc extends Bloc<InvitationEvent, InvitationState> {
     if (state.status == InvitationStatus.loading) return;
     emit(state.copyWith(status: InvitationStatus.loading, message: null));
     try {
-      final requests = await _repository.getOwnRequests();
-      emit(state.copyWith(status: InvitationStatus.ready, requests: requests));
+      final activity = await _repository.getOwnJoinActivity();
+      emit(
+        state.copyWith(
+          status: InvitationStatus.ready,
+          requests: activity.requests,
+          invitationInboxStatus: InvitationInboxStatus.ready,
+          ownInvitations: activity.invitations,
+          invitationInboxMessage: null,
+        ),
+      );
     } on ApiFailure catch (error) {
       emit(
         state.copyWith(
@@ -247,6 +255,7 @@ class InvitationBloc extends Bloc<InvitationEvent, InvitationState> {
       state.copyWith(
         invitationInboxStatus: InvitationInboxStatus.mutating,
         invitationInboxMessage: null,
+        acceptingInvitationId: event.invitationId,
       ),
     );
     try {
@@ -258,6 +267,7 @@ class InvitationBloc extends Bloc<InvitationEvent, InvitationState> {
               .where((invitation) => invitation.id != event.invitationId)
               .toList(growable: false),
           invitationInboxMessage: 'Undangan berhasil diterima.',
+          clearAcceptingInvitation: true,
         ),
       );
     } on ApiFailure catch (error) {
@@ -265,6 +275,7 @@ class InvitationBloc extends Bloc<InvitationEvent, InvitationState> {
         state.copyWith(
           invitationInboxStatus: InvitationInboxStatus.failure,
           invitationInboxMessage: error.message,
+          clearAcceptingInvitation: true,
         ),
       );
     }

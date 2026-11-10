@@ -17,6 +17,10 @@ import 'package:frontend/modules/auth/presentation/pages/onboarding/onboarding_p
 import 'package:frontend/modules/auth/presentation/pages/welcome_page.dart';
 import 'package:frontend/modules/auth/presentation/validators/password_validator.dart';
 import 'package:frontend/core/widgets/main_navigation.dart';
+import 'package:frontend/modules/invitation/data/invitation_repository.dart';
+import 'package:frontend/modules/invitation/presentation/bloc/invitation_bloc.dart';
+import 'package:frontend/modules/invitation/presentation/pages/join_organization_page.dart';
+import 'package:frontend/modules/invitation/presentation/pages/join_request_page.dart';
 
 const _employeeUser = UserEntity(
   id: 'employee',
@@ -123,6 +127,96 @@ void main() {
       ),
     );
     expect(find.text('Karyawan'), findsOneWidget);
+  });
+
+  testWidgets('join organization focuses on invitations and join code', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MultiBlocProvider(
+        providers: [
+          BlocProvider(create: (_) => AuthBloc(AuthRepository(client: Dio()))),
+          BlocProvider(
+            create: (_) => InvitationBloc(InvitationRepository(client: Dio())),
+          ),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light,
+          home: const JoinOrganizationPage(),
+        ),
+      ),
+    );
+
+    expect(find.text('Gabung ke Tempat Kerja'), findsOneWidget);
+    expect(find.text('Gabung dengan Kode'), findsOneWidget);
+    expect(find.text('Kode Bergabung'), findsOneWidget);
+    expect(find.text('Ajukan Bergabung'), findsOneWidget);
+    expect(find.text('Undangan untukmu'), findsNothing);
+    expect(find.text('Sudah punya akun? Masuk'), findsNothing);
+    expect(find.byType(BackButton), findsNothing);
+
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('employee request status shows incoming owner invitations', (
+    tester,
+  ) async {
+    final client = Dio(BaseOptions(baseUrl: 'https://gawen.test'));
+    client.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          final data = options.path.endsWith('/join-requests/me')
+              ? {
+                  'status': 'ok',
+                  'data': {
+                    'requests': [],
+                    'invitations': [
+                      {
+                        'id': 'invitation-1',
+                        'email': 'employee@example.com',
+                        'expiresAt': '2026-11-17T10:00:00.000Z',
+                        'createdAt': '2026-11-10T10:00:00.000Z',
+                        'organization': {
+                          'id': 'organization-1',
+                          'name': 'Kedai Gawen',
+                        },
+                      },
+                    ],
+                  },
+                }
+              : {
+                  'status': 'ok',
+                  'data': {'requests': []},
+                };
+          handler.resolve(
+            Response(requestOptions: options, statusCode: 200, data: data),
+          );
+        },
+      ),
+    );
+
+    await tester.pumpWidget(
+      MultiBlocProvider(
+        providers: [
+          BlocProvider(create: (_) => AuthBloc(AuthRepository(client: Dio()))),
+          BlocProvider(
+            create: (_) => InvitationBloc(InvitationRepository(client: client)),
+          ),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light,
+          home: const JoinRequestsPage(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Undangan untukmu'), findsOneWidget);
+    expect(find.text('Kedai Gawen'), findsOneWidget);
+    expect(find.text('Terima Undangan'), findsOneWidget);
+    expect(find.text('Belum ada permintaan bergabung'), findsNothing);
+
+    await tester.pumpWidget(const SizedBox());
   });
 
   testWidgets('organization business type dropdown shows loaded selection', (

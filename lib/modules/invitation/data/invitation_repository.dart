@@ -25,25 +25,33 @@ class InvitationRepository {
         return message;
       });
 
-  Future<List<JoinRequestEntity>> getOwnRequests() => executeApiRequest(
-    () async {
-      final response = await _client.get<Map<String, dynamic>>(
-        '/api/employees/join-requests/me',
-      );
-      final requests = response.data?['data'];
-      if (requests is! Map<String, dynamic> || requests['requests'] is! List) {
-        throw const ApiFailure('Respons status permintaan tidak valid.');
-      }
-      final entries = requests['requests'] as List<dynamic>;
-      if (entries.any((entry) => entry is! Map<String, dynamic>)) {
-        throw const ApiFailure('Data status permintaan tidak valid.');
-      }
-      return entries
+  Future<OwnJoinActivity> getOwnJoinActivity() => executeApiRequest(() async {
+    final response = await _client.get<Map<String, dynamic>>(
+      '/api/employees/join-requests/me',
+    );
+    final data = response.data?['data'];
+    if (data is! Map<String, dynamic> ||
+        data['requests'] is! List ||
+        data['invitations'] is! List) {
+      throw const ApiFailure('Respons status bergabung tidak valid.');
+    }
+    final requestEntries = data['requests'] as List<dynamic>;
+    final invitationEntries = data['invitations'] as List<dynamic>;
+    if (requestEntries.any((entry) => entry is! Map<String, dynamic>) ||
+        invitationEntries.any((entry) => entry is! Map<String, dynamic>)) {
+      throw const ApiFailure('Data status bergabung tidak valid.');
+    }
+    return OwnJoinActivity(
+      requests: requestEntries
           .cast<Map<String, dynamic>>()
           .map(JoinRequestModel.fromJson)
-          .toList(growable: false);
-    },
-  );
+          .toList(growable: false),
+      invitations: invitationEntries
+          .cast<Map<String, dynamic>>()
+          .map(InvitationModel.fromJson)
+          .toList(growable: false),
+    );
+  });
 
   Future<List<JoinRequestEntity>> getOwnerRequests(String organizationId) =>
       executeApiRequest(() async {
@@ -54,6 +62,7 @@ class InvitationRepository {
         if (data is! Map<String, dynamic> || data['requests'] is! List) {
           throw const ApiFailure('Respons permintaan karyawan tidak valid.');
         }
+
         final entries = data['requests'] as List;
         if (entries.any((entry) => entry is! Map<String, dynamic>)) {
           throw const ApiFailure('Data permintaan karyawan tidak valid.');
@@ -96,7 +105,7 @@ class InvitationRepository {
   Future<List<InvitationEntity>> getOwnInvitations() =>
       executeApiRequest(() async {
         final response = await _client.get<Map<String, dynamic>>(
-          '/api/employees/invitations/me',
+          '/api/employees/join-requests/me',
         );
         final data = response.data?['data'];
         if (data is! Map<String, dynamic> || data['invitations'] is! List) {
@@ -134,4 +143,11 @@ class InvitationRepository {
       data: {'token': token.trim()},
     );
   });
+}
+
+class OwnJoinActivity {
+  const OwnJoinActivity({required this.requests, required this.invitations});
+
+  final List<JoinRequestEntity> requests;
+  final List<InvitationEntity> invitations;
 }

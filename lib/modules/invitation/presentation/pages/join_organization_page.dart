@@ -6,8 +6,21 @@ import 'package:frontend/core/router/route_names.dart';
 import 'package:frontend/core/theme/app_theme.dart';
 import 'package:frontend/core/widgets/gawen_widgets.dart';
 import 'package:frontend/modules/auth/presentation/bloc/auth_bloc.dart';
+import 'package:frontend/modules/invitation/domain/entities/invitation_entity.dart';
 import 'package:frontend/modules/invitation/presentation/bloc/invitation_bloc.dart';
+import 'package:frontend/modules/invitation/presentation/widgets/invitation_card.dart';
 import 'package:go_router/go_router.dart';
+
+bool _isValidBusinessCode(String value) {
+  final code = value.trim();
+  return code.length == 8 &&
+      code.codeUnits.every(
+        (character) =>
+            (character >= 48 && character <= 57) ||
+            (character >= 65 && character <= 90) ||
+            (character >= 97 && character <= 122),
+      );
+}
 
 class JoinOrganizationPage extends StatefulWidget {
   const JoinOrganizationPage({super.key});
@@ -108,100 +121,89 @@ class _JoinOrganizationPageState extends State<JoinOrganizationPage> {
     },
     builder: (context, state) {
       final loading = state.status == InvitationStatus.loading;
-      final authenticated = context.select(
-        (AuthBloc bloc) => bloc.state.hasVerifiedSession,
-      );
+      final acceptingInvitation =
+          state.invitationInboxStatus == InvitationInboxStatus.mutating;
+      final hasInvitations = state.ownInvitations.isNotEmpty;
       return Scaffold(
         body: SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const PageHeader(),
-                const SizedBox(height: 24),
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: GawenColors.primarySoft,
-                    borderRadius: BorderRadius.circular(17),
-                  ),
-                  child: const Icon(
-                    Icons.work_outline_rounded,
-                    color: GawenColors.primary,
-                    size: 28,
-                  ),
-                ),
-                const SizedBox(height: 18),
-                const ScreenIntro(
-                  title: 'Gabung ke Tempat Kerja',
-                  description:
-                      'Masukkan kode bisnis 8 karakter yang diberikan pemilik usaha.',
-                ),
-                if (authenticated) ...[
-                  _OwnInvitationsSection(
-                    state: state,
-                    onRefresh: () => context.read<InvitationBloc>().add(
-                      const OwnInvitationsRefreshRequested(),
+            padding: const EdgeInsets.fromLTRB(
+              GawenSpacing.lg,
+              GawenSpacing.lg,
+              GawenSpacing.lg,
+              GawenSpacing.xxl,
+            ),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 520),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const _JoinOrganizationHero(),
+                    if (hasInvitations) ...[
+                      const SizedBox(height: GawenSpacing.xl),
+                      _OwnInvitationsSection(
+                        invitations: state.ownInvitations,
+                        acceptingInvitationId: state.acceptingInvitationId,
+                        inboxStatus: state.invitationInboxStatus,
+                        inboxMessage: state.invitationInboxMessage,
+                        onRetry: () => context.read<InvitationBloc>().add(
+                          const OwnInvitationsRefreshRequested(),
+                        ),
+                        onAccept: (invitationId) => context
+                            .read<InvitationBloc>()
+                            .add(EmployeeInvitationAccepted(invitationId)),
+                      ),
+                      const SizedBox(height: GawenSpacing.xl),
+                      const _AlternativeDivider(),
+                    ] else if (state.invitationInboxStatus ==
+                        InvitationInboxStatus.failure) ...[
+                      const SizedBox(height: GawenSpacing.xl),
+                      GawenRequestError(
+                        message:
+                            state.invitationInboxMessage ??
+                            'Undangan gagal dimuat.',
+                        onRetry: () => context.read<InvitationBloc>().add(
+                          const OwnInvitationsRefreshRequested(),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: GawenSpacing.xl),
+                    const _JoinWithCodeTitle(),
+                    if (state.status == InvitationStatus.failure &&
+                        state.message != null) ...[
+                      const SizedBox(height: GawenSpacing.md),
+                      GawenRequestError(message: state.message!),
+                    ],
+                    Form(
+                      key: _formKey,
+                      child: GawenTextField(
+                        controller: _codeController,
+                        label: 'Kode Bergabung',
+                        hint: 'Masukkan 8 karakter kode',
+                        icon: Icons.key_outlined,
+                        textCapitalization: TextCapitalization.characters,
+                        textInputAction: TextInputAction.done,
+                        maxLength: 8,
+                        enabled: !loading && !acceptingInvitation,
+                        validator: (value) {
+                          if (!_isValidBusinessCode(value ?? '')) {
+                            return 'Masukkan kode yang terdiri dari 8 huruf atau angka.';
+                          }
+                          return null;
+                        },
+                      ),
                     ),
-                    onAccept: (invitationId) => context
-                        .read<InvitationBloc>()
-                        .add(EmployeeInvitationAccepted(invitationId)),
-                  ),
-                  const SizedBox(height: 16),
-                ],
-                if (!authenticated)
-                  GawenRequestError(
-                    message:
-                        'Masuk ke akun karyawan terlebih dahulu untuk mengajukan permintaan bergabung.',
-                  ),
-                if (state.status == InvitationStatus.failure &&
-                    state.message != null)
-                  GawenRequestError(message: state.message!),
-                Form(
-                  key: _formKey,
-                  child: GawenTextField(
-                    controller: _codeController,
-                    label: 'Kode bisnis',
-                    hint: 'CONTOH: KOPI2024',
-                    icon: Icons.key_outlined,
-                    textCapitalization: TextCapitalization.characters,
-                    textInputAction: TextInputAction.done,
-                    maxLength: 8,
-                    validator: (value) {
-                      final code = value?.trim() ?? '';
-                      if (!RegExp(r'^[A-Za-z0-9]{8}$').hasMatch(code)) {
-                        return 'Masukkan kode 8 huruf atau angka.';
-                      }
-                      return null;
-                    },
-                  ),
+                    const SizedBox(height: GawenSpacing.lg),
+                    GawenPrimaryButton(
+                      label: 'Ajukan Bergabung',
+                      onPressed: _submit,
+                      isLoading: loading,
+                      enabled: !acceptingInvitation,
+                    ),
+                  ],
                 ),
-                const Padding(
-                  padding: EdgeInsets.only(top: 8),
-                  child: Text(
-                    'Kode biasanya terdiri dari 8 huruf atau angka.',
-                    style: TextStyle(color: GawenColors.muted, fontSize: 11),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: GawenPrimaryButton(
-                    label: 'Lanjutkan',
-                    onPressed: _submit,
-                    isLoading: loading,
-                    enabled: authenticated,
-                  ),
-                ),
-                Center(
-                  child: TextButton(
-                    onPressed: () => context.push(AppRoutes.login),
-                    child: const Text('Sudah punya akun? Masuk'),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),
@@ -210,94 +212,99 @@ class _JoinOrganizationPageState extends State<JoinOrganizationPage> {
   );
 }
 
+class _JoinOrganizationHero extends StatelessWidget {
+  const _JoinOrganizationHero();
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const GawenLogo(),
+      const SizedBox(height: GawenSpacing.xl),
+      const GawenTitle(
+        'Gabung ke Tempat Kerja',
+        textAlign: TextAlign.center,
+        style: TextStyle(fontSize: 23),
+      ),
+      const SizedBox(height: GawenSpacing.sm),
+      const GawenBodyText(
+        'Masukkan kode dari pemilik usaha atau pilih undangan yang tersedia.',
+        style: TextStyle(color: GawenColors.muted),
+      ),
+    ],
+  );
+}
+
+class _JoinWithCodeTitle extends StatelessWidget {
+  const _JoinWithCodeTitle();
+
+  @override
+  Widget build(BuildContext context) => const Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      GawenSectionTitle('Gabung dengan Kode'),
+      SizedBox(height: GawenSpacing.xs),
+      GawenBodyText(
+        'Masukkan kode yang diberikan pemilik usaha.',
+        style: TextStyle(color: GawenColors.muted),
+      ),
+    ],
+  );
+}
+
+class _AlternativeDivider extends StatelessWidget {
+  const _AlternativeDivider();
+
+  @override
+  Widget build(BuildContext context) => const Row(
+    children: [
+      Expanded(child: Divider(color: GawenColors.border)),
+      Padding(
+        padding: EdgeInsets.symmetric(horizontal: GawenSpacing.md),
+        child: GawenCaption('atau'),
+      ),
+      Expanded(child: Divider(color: GawenColors.border)),
+    ],
+  );
+}
+
 class _OwnInvitationsSection extends StatelessWidget {
   const _OwnInvitationsSection({
-    required this.state,
-    required this.onRefresh,
+    required this.invitations,
+    required this.acceptingInvitationId,
+    required this.inboxStatus,
+    required this.inboxMessage,
+    required this.onRetry,
     required this.onAccept,
   });
 
-  final InvitationState state;
-  final VoidCallback onRefresh;
+  final List<InvitationEntity> invitations;
+  final String? acceptingInvitationId;
+  final InvitationInboxStatus inboxStatus;
+  final String? inboxMessage;
+  final VoidCallback onRetry;
   final ValueChanged<String> onAccept;
 
   @override
-  Widget build(BuildContext context) {
-    final loading =
-        state.invitationInboxStatus == InvitationInboxStatus.loading;
-    final accepting =
-        state.invitationInboxStatus == InvitationInboxStatus.mutating;
-    return GawenCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Expanded(
-                child: Text(
-                  'Undangan untukmu',
-                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
-                ),
-              ),
-              IconButton(
-                onPressed: loading ? null : onRefresh,
-                tooltip: 'Muat ulang undangan',
-                icon: const Icon(Icons.refresh),
-              ),
-            ],
-          ),
-          if (loading)
-            const GawenLoading(size: 24)
-          else if (state.invitationInboxStatus == InvitationInboxStatus.failure)
-            GawenRequestError(
-              message: state.invitationInboxMessage ?? 'Undangan gagal dimuat.',
-              onRetry: onRefresh,
-            )
-          else if (state.ownInvitations.isEmpty)
-            const Text(
-              'Belum ada undangan untuk bergabung.',
-              style: TextStyle(color: GawenColors.muted),
-            )
-          else
-            ...state.ownInvitations.map(
-              (invitation) => Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: GawenColors.background,
-                    borderRadius: BorderRadius.circular(GawenRadius.md),
-                    border: Border.all(color: GawenColors.border),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        invitation.organizationName ?? 'Undangan organisasi',
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Berlaku sampai ${invitation.expiresAt.toLocal()}',
-                        style: const TextStyle(
-                          color: GawenColors.muted,
-                          fontSize: 12,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      GawenPrimaryButton(
-                        label: 'Terima Undangan',
-                        onPressed: () => onAccept(invitation.id),
-                        isLoading: accepting,
-                        enabled: !accepting,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const GawenSectionTitle('Undangan untukmu'),
+      const SizedBox(height: GawenSpacing.md),
+      for (final invitation in invitations)
+        InvitationCard(
+          invitation: invitation,
+          isLoading: acceptingInvitationId == invitation.id,
+          isEnabled: acceptingInvitationId == null,
+          onAccept: () => onAccept(invitation.id),
+        ),
+      if (inboxStatus == InvitationInboxStatus.failure) ...[
+        const SizedBox(height: GawenSpacing.md),
+        GawenRequestError(
+          message: inboxMessage ?? 'Undangan gagal diproses.',
+          onRetry: onRetry,
+        ),
+      ],
+    ],
+  );
 }

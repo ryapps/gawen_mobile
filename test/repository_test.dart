@@ -343,11 +343,12 @@ void main() {
               },
             };
           }
-          if (options.path.endsWith('/invitations/me')) {
+          if (options.path.endsWith('/join-requests/me')) {
             expect(options.method, 'GET');
             return {
               'status': 'ok',
               'data': {
+                'requests': [],
                 'invitations': [
                   {
                     'id': 'invitation-1',
@@ -420,15 +421,28 @@ void main() {
                   },
                 },
               ],
+              'invitations': [
+                {
+                  'id': 'invitation-2',
+                  'email': 'employee@example.com',
+                  'expiresAt': '2026-10-08T10:00:00.000Z',
+                  'createdAt': '2026-10-01T10:00:00.000Z',
+                  'organization': {
+                    'id': 'organization-2',
+                    'name': 'Kedai Baru',
+                  },
+                },
+              ],
             },
           };
         }),
       );
 
-      final requests = await repository.getOwnRequests();
+      final activity = await repository.getOwnJoinActivity();
 
-      expect(requests.single.status?.name, 'rejected');
-      expect(requests.single.organization?.name, 'Warung Ayu');
+      expect(activity.requests.single.status?.name, 'rejected');
+      expect(activity.requests.single.organization?.name, 'Warung Ayu');
+      expect(activity.invitations.single.organizationName, 'Kedai Baru');
     },
   );
 }

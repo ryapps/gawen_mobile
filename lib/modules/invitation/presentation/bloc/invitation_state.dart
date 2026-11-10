@@ -30,6 +30,7 @@ class InvitationState {
     this.invitationInboxStatus = InvitationInboxStatus.initial,
     this.ownInvitations = const [],
     this.invitationInboxMessage,
+    this.acceptingInvitationId,
   });
 
   final InvitationStatus status;
@@ -44,6 +45,7 @@ class InvitationState {
   final InvitationInboxStatus invitationInboxStatus;
   final List<InvitationEntity> ownInvitations;
   final String? invitationInboxMessage;
+  final String? acceptingInvitationId;
 
   InvitationState copyWith({
     InvitationStatus? status,
@@ -59,6 +61,8 @@ class InvitationState {
     InvitationInboxStatus? invitationInboxStatus,
     List<InvitationEntity>? ownInvitations,
     String? invitationInboxMessage,
+    String? acceptingInvitationId,
+    bool clearAcceptingInvitation = false,
   }) => InvitationState(
     status: status ?? this.status,
     requests: requests ?? this.requests,
@@ -74,5 +78,8 @@ class InvitationState {
     invitationInboxStatus: invitationInboxStatus ?? this.invitationInboxStatus,
     ownInvitations: ownInvitations ?? this.ownInvitations,
     invitationInboxMessage: invitationInboxMessage,
+    acceptingInvitationId: clearAcceptingInvitation
+        ? null
+        : acceptingInvitationId ?? this.acceptingInvitationId,
   );
 }
