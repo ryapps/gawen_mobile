@@ -54,14 +54,16 @@ class MainNavigation extends StatelessWidget {
 
             return Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 3),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: GawenSpacing.xs,
+                ),
                 child: Material(
                   color: isSelected
-                      ? const Color(0xFFE5F5EC)
+                      ? GawenColors.primarySoft
                       : Colors.transparent,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(GawenRadius.lg),
                   child: InkWell(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(GawenRadius.lg),
                     onTap: () {
                       if (!isSelected) {
                         context.pushReplacement(item.path);
@@ -76,7 +78,7 @@ class MainNavigation extends StatelessWidget {
                             item.icon,
                             color: isSelected
                                 ? GawenColors.primary
-                                : const Color(0xFF68756C),
+                                : GawenColors.muted,
                           ),
                           const SizedBox(height: 4),
                           Text(
@@ -88,7 +90,7 @@ class MainNavigation extends StatelessWidget {
                                   : FontWeight.w500,
                               color: isSelected
                                   ? GawenColors.primary
-                                  : const Color(0xFF68756C),
+                                  : GawenColors.muted,
                             ),
                           ),
                         ],

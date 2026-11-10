@@ -3,7 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend/core/theme/app_theme.dart';
 import 'package:frontend/core/widgets/app_bar.dart';
-import 'package:frontend/core/widgets/gawen_image.dart';
+import 'package:frontend/core/widgets/gawen_avatar.dart';
+import 'package:frontend/core/widgets/gawen_button.dart';
+import 'package:frontend/core/widgets/gawen_card.dart';
+import 'package:frontend/core/widgets/gawen_empty_state.dart';
+import 'package:frontend/core/widgets/gawen_loading.dart';
+import 'package:frontend/core/widgets/gawen_status_badge.dart';
+import 'package:frontend/core/widgets/gawen_text.dart';
 import 'package:frontend/modules/auth/presentation/bloc/auth_bloc.dart';
 import 'package:frontend/modules/invitation/domain/entities/join_request_entity.dart';
 import 'package:frontend/modules/invitation/presentation/bloc/invitation_bloc.dart';
@@ -33,18 +39,20 @@ class _OwnerJoinRequestDetailPageState
           final request =
               _findRequest(state.ownerRequests) ?? _validInitialRequest();
           return Scaffold(
-            appBar: CustomAppBar(
+            appBar: GawenAppBar(
               title: 'Detail Permintaan',
               isLeadingEnabled: true,
             ),
             body: SafeArea(
               child: request == null
-                  ? _UnavailableRequest(
-                      loading:
-                          state.ownerRequestsStatus ==
-                          OwnerJoinRequestsStatus.loading,
-                      onRetry: _reloadRequests,
-                    )
+                  ? state.ownerRequestsStatus == OwnerJoinRequestsStatus.loading
+                        ? const GawenLoading()
+                        : GawenEmptyState(
+                            title: 'Detail permintaan tidak tersedia',
+                            icon: Icons.person_search_outlined,
+                            actionLabel: 'Muat ulang',
+                            onAction: _reloadRequests,
+                          )
                   : _RequestDetails(
                       request: request,
                       busy:
@@ -153,63 +161,29 @@ class _RequestDetails extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
       children: [
-        Column(
-          children: [
-            ClipOval(
-              child: GawenImage(
-                source: user?.photoProfile,
-                width: 92,
-                height: 92,
-                fit: BoxFit.cover,
+        GawenCard(
+          child: Column(
+            children: [
+              GawenAvatar(imageUrl: user?.photoProfile, size: 92),
+              const SizedBox(height: 14),
+              GawenTitle(
+                user?.name ?? 'Calon karyawan',
+                textAlign: TextAlign.center,
               ),
-            ),
-            const SizedBox(height: 14),
-            Text(
-              user?.name ?? 'Calon karyawan',
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFF3E4),
-                borderRadius: BorderRadius.circular(20),
+              const SizedBox(height: 8),
+              const GawenStatusBadge(
+                status: GawenStatus.pending,
+                icon: CupertinoIcons.clock,
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    CupertinoIcons.clock,
-                    size: 14,
-                    color: const Color(0xFF9A5A08),
-                  ),
-                  const SizedBox(width: 5),
-                  const Text(
-                    'Menunggu persetujuan',
-                    style: TextStyle(
-                      color: Color(0xFF9A5A08),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
         const SizedBox(height: 18),
-        const Text(
-          'Informasi pemohon',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
-        ),
+        const GawenSectionTitle('Informasi pemohon'),
         const SizedBox(height: 10),
-        Container(
-          decoration: BoxDecoration(
-            color: GawenColors.background,
-            border: Border.all(color: GawenColors.border),
-            borderRadius: BorderRadius.circular(20),
-          ),
+        GawenCard(
+          backgroundColor: GawenColors.background,
+          padding: EdgeInsets.zero,
           child: Column(
             children: [
               _DetailRow(
@@ -237,43 +211,18 @@ class _RequestDetails extends StatelessWidget {
         ),
 
         const SizedBox(height: 24),
-        Expanded(
-          child: OutlinedButton(
-            onPressed: busy ? null : () => onDecision(false),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: GawenColors.muted,
-              side: const BorderSide(color: GawenColors.border),
-              minimumSize: const Size.fromHeight(48),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(13),
-              ),
-            ),
-            child: const Text('Tolak permintaan'),
-          ),
+        GawenDangerButton(
+          label: 'Tolak permintaan',
+          onPressed: () => onDecision(false),
+          isLoading: busy,
+          icon: Icons.close_rounded,
         ),
         const SizedBox(height: 12),
-        Expanded(
-          child: FilledButton.icon(
-            onPressed: busy ? null : () => onDecision(true),
-            style: FilledButton.styleFrom(
-              backgroundColor: GawenColors.primary,
-              minimumSize: const Size.fromHeight(48),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(13),
-              ),
-            ),
-            icon: const Icon(Icons.check, size: 20),
-            label: busy
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
-                : const Text('Terima sebagai karyawan'),
-          ),
+        GawenPrimaryButton(
+          label: 'Terima sebagai karyawan',
+          onPressed: () => onDecision(true),
+          isLoading: busy,
+          icon: Icons.check_rounded,
         ),
       ],
     );
@@ -293,7 +242,6 @@ class _DetailRow extends StatelessWidget {
   final String value;
   final bool isLast;
 
-
   @override
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
@@ -310,17 +258,11 @@ class _DetailRow extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                label,
-                style: const TextStyle(color: GawenColors.muted, fontSize: 11),
-              ),
+              GawenCaption(label),
               const SizedBox(height: 3),
-              Text(
+              GawenBodyText(
                 value,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: const TextStyle(fontWeight: FontWeight.w600),
               ),
             ],
           ),
@@ -330,45 +272,12 @@ class _DetailRow extends StatelessWidget {
   );
 }
 
-class _UnavailableRequest extends StatelessWidget {
-  const _UnavailableRequest({required this.loading, required this.onRetry});
-
-  final bool loading;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) => Center(
-    child: Padding(
-      padding: const EdgeInsets.all(24),
-      child: loading
-          ? const CircularProgressIndicator()
-          : Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.person_search_outlined,
-                  size: 48,
-                  color: GawenColors.muted,
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'Detail permintaan tidak tersedia.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: 8),
-                TextButton(onPressed: onRetry, child: const Text('Muat ulang')),
-              ],
-            ),
-    ),
-  );
-}
-
 String _formatRequestDate(DateTime date) {
   final localDate = date.toLocal();
   final day = localDate.day.toString().padLeft(2, '0');
   final month = localDate.month.toString().padLeft(2, '0');
-  final isToday = DateTime.now().toLocal().day == localDate.day &&
+  final isToday =
+      DateTime.now().toLocal().day == localDate.day &&
       DateTime.now().toLocal().month == localDate.month &&
       DateTime.now().toLocal().year == localDate.year;
   return '${isToday ? 'Hari ini' : '$day/$month/${localDate.year}'}, '

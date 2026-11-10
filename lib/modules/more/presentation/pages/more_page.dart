@@ -7,7 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/route_names.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../../core/widgets/gawen_image.dart';
+import '../../../../core/widgets/gawen_avatar.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../../core/widgets/main_navigation.dart';
 
@@ -18,7 +18,7 @@ class MorePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthBloc>().state;
     return Scaffold(
-      appBar: CustomAppBar(
+      appBar: GawenAppBar(
         title: 'Lainnya',
         subtitle: 'Profil & pengaturan akun',
         action: IconButton(
@@ -45,14 +45,7 @@ class MorePage extends StatelessWidget {
             ),
             child: Row(
               children: [
-                ClipOval(
-                  child: GawenImage(
-                    source: auth.user?.photoProfile,
-                    width: 50,
-                    height: 50,
-                    fit: BoxFit.cover,
-                  ),
-                ),
+                GawenAvatar(imageUrl: auth.user?.photoProfile, size: 50),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(

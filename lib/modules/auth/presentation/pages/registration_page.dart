@@ -110,7 +110,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                       : 'Buat akun untuk terhubung dengan tempat kerjamu.',
                 ),
                 if (state.status == AuthStatus.failure && state.message != null)
-                  RequestError(message: state.message!),
+                  GawenRequestError(message: state.message!),
                 Form(
                   key: _formKey,
                   child: Column(
@@ -186,18 +186,10 @@ class _RegistrationPageState extends State<RegistrationPage> {
                       const SizedBox(height: 20),
                       SizedBox(
                         width: double.infinity,
-                        child: FilledButton(
-                          onPressed: loading ? null : _submit,
-                          child: loading
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : Text(owner ? 'Buat Akun' : 'Daftar'),
+                        child: GawenPrimaryButton(
+                          label: owner ? 'Buat Akun' : 'Daftar',
+                          onPressed: _submit,
+                          isLoading: loading,
                         ),
                       ),
                     ],

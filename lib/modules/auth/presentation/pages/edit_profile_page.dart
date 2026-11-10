@@ -7,7 +7,8 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/theme/app_theme.dart';
-import '../../../../core/widgets/gawen_image.dart';
+import '../../../../core/widgets/gawen_avatar.dart';
+import '../../../../core/widgets/gawen_button.dart';
 import '../../../../core/widgets/gawen_text_field.dart';
 import '../bloc/auth_bloc.dart';
 
@@ -186,7 +187,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: CustomAppBar(title: 'Edit Profil', isLeadingEnabled: true),
+    appBar: GawenAppBar(title: 'Edit Profil', isLeadingEnabled: true),
     body: SafeArea(
       child: Form(
         key: _formKey,
@@ -211,11 +212,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                 height: 96,
                                 fit: BoxFit.cover,
                               )
-                            : GawenImage(
-                                source: _photoProfile.text,
-                                width: 96,
-                                height: 96,
-                                fit: BoxFit.cover,
+                            : GawenAvatar(
+                                imageUrl: _photoProfile.text,
+                                size: 96,
                               ),
                       ),
                     ),
@@ -267,15 +266,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
               Text(_error!, style: const TextStyle(color: Colors.red)),
             ],
             const SizedBox(height: 24),
-            FilledButton(
-              onPressed: _saving ? null : _save,
-              child: _saving
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Simpan perubahan'),
+            GawenPrimaryButton(
+              label: 'Simpan perubahan',
+              onPressed: _save,
+              isLoading: _saving,
             ),
           ],
         ),

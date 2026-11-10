@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend/core/theme/app_theme.dart';
-import 'package:frontend/core/widgets/app_bar.dart';
 import 'package:frontend/core/widgets/gawen_widgets.dart';
 import 'package:frontend/modules/auth/presentation/bloc/auth_bloc.dart';
 import 'package:frontend/modules/invitation/domain/entities/invitation_entity.dart';
@@ -65,7 +64,7 @@ class _InviteEmployeePageState extends State<InviteEmployeePage> {
         ),
       ],
       child: Scaffold(
-        appBar: CustomAppBar(title: 'Undang Karyawan', isLeadingEnabled:true),
+        appBar: GawenAppBar(title: 'Undang Karyawan', isLeadingEnabled: true),
         body: SafeArea(
           child: BlocBuilder<OrganizationBloc, OrganizationState>(
             builder: (context, organizationState) {
@@ -304,6 +303,7 @@ class _EmailInvitationSection extends StatelessWidget {
   Widget build(BuildContext context) => Card(
     child: ExpansionTile(
       leading: const Icon(Icons.mail_outline),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8), side: BorderSide(width:0)),
       title: const Text(
         'Undang lewat email',
         style: TextStyle(fontWeight: FontWeight.w700),
@@ -312,7 +312,7 @@ class _EmailInvitationSection extends StatelessWidget {
       childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       children: [
         if (state.emailInvitationStatus == EmailInvitationStatus.failure)
-          RequestError(
+          GawenRequestError(
             message: state.emailInvitationMessage ?? 'Undangan gagal dibuat.',
           ),
         Form(
@@ -337,21 +337,11 @@ class _EmailInvitationSection extends StatelessWidget {
         const SizedBox(height: 14),
         SizedBox(
           width: double.infinity,
-          child: FilledButton(
-            onPressed:
-                state.emailInvitationStatus == EmailInvitationStatus.mutating
-                ? null
-                : onSubmit,
-            child: state.emailInvitationStatus == EmailInvitationStatus.mutating
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
-                : const Text('Buat Undangan Email'),
+          child: GawenPrimaryButton(
+            label: 'Buat Undangan Email',
+            onPressed: onSubmit,
+            isLoading:
+                state.emailInvitationStatus == EmailInvitationStatus.mutating,
           ),
         ),
       ],

@@ -55,56 +55,31 @@ class _JoinRequestsPageState extends State<JoinRequestsPage> {
                   if (state.status == InvitationStatus.loading)
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 32),
-                      child: Center(child: CircularProgressIndicator()),
+                      child: GawenLoading(),
                     )
                   else if (state.status == InvitationStatus.failure)
                     Padding(
                       padding: const EdgeInsets.only(top: 16),
-                      child: Column(
-                        children: [
-                          RequestError(
-                            message: state.message ?? 'Gagal memuat status.',
-                          ),
-                          TextButton(
-                            onPressed: () => context.read<InvitationBloc>().add(
-                              const RequestsRefreshRequested(),
-                            ),
-                            child: const Text('Coba lagi'),
-                          ),
-                        ],
+                      child: GawenRequestError(
+                        message: state.message ?? 'Gagal memuat status.',
+                        onRetry: () => context.read<InvitationBloc>().add(
+                          const RequestsRefreshRequested(),
+                        ),
                       ),
                     )
                   else if (state.requests.isEmpty)
-                    Container(
-                      margin: const EdgeInsets.only(top: 24),
-                      padding: const EdgeInsets.all(18),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border.all(color: GawenColors.border),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: const Column(
-                        children: [
-                          Icon(
-                            Icons.inbox_outlined,
-                            size: 38,
-                            color: GawenColors.muted,
-                          ),
-                          SizedBox(height: 10),
-                          Text(
-                            'Belum ada permintaan bergabung.',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(fontWeight: FontWeight.w700),
-                          ),
-                        ],
+                    const Padding(
+                      padding: EdgeInsets.only(top: 24),
+                      child: GawenEmptyState(
+                        title: 'Belum ada permintaan bergabung',
                       ),
                     )
                   else
                     ...state.requests.map(_requestCard),
                   const SizedBox(height: 20),
-                  FilledButton(
+                  GawenPrimaryButton(
+                    label: 'Masukkan Kode Bisnis',
                     onPressed: () => context.push(AppRoutes.join),
-                    child: const Text('Masukkan Kode Bisnis'),
                   ),
                 ],
               ),
@@ -115,32 +90,9 @@ class _JoinRequestsPageState extends State<JoinRequestsPage> {
 
   Widget _requestCard(JoinRequestEntity request) {
     final orgName = request.organization?.name ?? 'Tempat kerja';
-    final (label, color, icon) = switch (request.status) {
-      null => ('Status belum tersedia', GawenColors.muted, Icons.help_outline),
-      JoinRequestStatus.pending => (
-        'Menunggu persetujuan',
-        GawenColors.warning,
-        Icons.schedule,
-      ),
-      JoinRequestStatus.approved => (
-        'Disetujui',
-        GawenColors.primary,
-        Icons.check_circle,
-      ),
-      JoinRequestStatus.rejected => (
-        'Ditolak',
-        GawenColors.error,
-        Icons.cancel_outlined,
-      ),
-    };
-    return Container(
+    return GawenCard(
       margin: const EdgeInsets.only(top: 16),
       padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: GawenColors.border),
-        borderRadius: BorderRadius.circular(16),
-      ),
       child: Row(
         children: [
           Container(
@@ -169,19 +121,22 @@ class _JoinRequestsPageState extends State<JoinRequestsPage> {
                   style: const TextStyle(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 5),
-                Row(
-                  children: [
-                    Icon(icon, size: 14, color: color),
-                    const SizedBox(width: 5),
-                    Text(
-                      label,
-                      style: TextStyle(
-                        color: color,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
+                GawenStatusBadge(
+                  status: switch (request.status) {
+                    JoinRequestStatus.pending => GawenStatus.pending,
+                    JoinRequestStatus.approved => GawenStatus.approved,
+                    JoinRequestStatus.rejected => GawenStatus.rejected,
+                    null => GawenStatus.inactive,
+                  },
+                  label: request.status == null
+                      ? 'Status belum tersedia'
+                      : null,
+                  icon: switch (request.status) {
+                    JoinRequestStatus.pending => Icons.schedule,
+                    JoinRequestStatus.approved => Icons.check_circle,
+                    JoinRequestStatus.rejected => Icons.cancel_outlined,
+                    null => Icons.help_outline,
+                  },
                 ),
               ],
             ),

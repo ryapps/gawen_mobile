@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend/core/theme/app_theme.dart';
-import 'package:frontend/core/widgets/app_bar.dart';
 import 'package:frontend/core/widgets/gawen_widgets.dart';
 import 'package:frontend/modules/auth/presentation/bloc/auth_bloc.dart';
 import 'package:frontend/modules/employee/presentation/bloc/employee_bloc.dart';
@@ -42,7 +41,7 @@ class _OwnerJoinRequestsPageState extends State<OwnerJoinRequestsPage> {
       }
     },
     builder: (context, state) => Scaffold(
-      appBar: CustomAppBar(
+      appBar: GawenAppBar(
         title: 'Permintaan Bergabung',
 
         isLeadingEnabled: true,
@@ -79,12 +78,12 @@ class _OwnerJoinRequestsPageState extends State<OwnerJoinRequestsPage> {
                   state.ownerRequests.isEmpty)
                 const Padding(
                   padding: EdgeInsets.all(28),
-                  child: Center(child: CircularProgressIndicator()),
+                  child: GawenLoading(),
                 )
               else ...[
                 if (state.ownerRequestsStatus ==
                     OwnerJoinRequestsStatus.failure)
-                  _RequestError(
+                  GawenRequestError(
                     message:
                         state.ownerRequestsMessage ??
                         'Permintaan bergabung gagal dimuat.',
@@ -93,7 +92,7 @@ class _OwnerJoinRequestsPageState extends State<OwnerJoinRequestsPage> {
                 if (state.ownerRequests.isEmpty &&
                     state.ownerRequestsStatus !=
                         OwnerJoinRequestsStatus.failure)
-                  _EmptyRequests(message: 'Belum ada permintaan bergabung')
+                  const GawenEmptyState(title: 'Belum ada permintaan bergabung')
                 else
                   ...state.ownerRequests.map(
                     (request) => _JoinRequestCard(
@@ -218,14 +217,7 @@ class _JoinRequestCard extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      ClipOval(
-                        child: GawenImage(
-                          source: user?.photoProfile,
-                          width: 52,
-                          height: 52,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
+                      GawenAvatar(imageUrl: user?.photoProfile, size: 52),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
@@ -294,31 +286,16 @@ class _JoinRequestCard extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: OutlinedButton(
+                child: GawenOutlinedButton(
+                  label: 'Tolak',
                   onPressed: busy ? null : () => onDecision(false),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: GawenColors.muted,
-                    side: const BorderSide(color: GawenColors.border),
-                    minimumSize: const Size.fromHeight(44),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text('Tolak'),
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: FilledButton(
+                child: GawenPrimaryButton(
+                  label: 'Terima',
                   onPressed: busy ? null : () => onDecision(true),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: GawenColors.primary,
-                    minimumSize: const Size.fromHeight(44),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text('Terima'),
                 ),
               ),
             ],
@@ -359,41 +336,4 @@ String _formatRequestTime(DateTime createdAt) {
   if (elapsed.inHours < 24) return '${elapsed.inHours} jam lalu';
   if (elapsed.inDays == 1) return 'kemarin';
   return '${elapsed.inDays} hari lalu';
-}
-
-class _EmptyRequests extends StatelessWidget {
-  const _EmptyRequests({required this.message});
-
-  final String message;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    margin: const EdgeInsets.only(top: 10),
-    padding: const EdgeInsets.all(18),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      border: Border.all(color: GawenColors.border),
-      borderRadius: BorderRadius.circular(16),
-    ),
-    child: Text(
-      message,
-      textAlign: TextAlign.center,
-      style: const TextStyle(color: GawenColors.muted),
-    ),
-  );
-}
-
-class _RequestError extends StatelessWidget {
-  const _RequestError({required this.message, required this.onRetry});
-
-  final String message;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) => Column(
-    children: [
-      RequestError(message: message),
-      TextButton(onPressed: onRetry, child: const Text('Coba lagi')),
-    ],
-  );
 }

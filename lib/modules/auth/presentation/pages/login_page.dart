@@ -189,7 +189,7 @@ class _LoginPageState extends State<LoginPage> {
                       : 'Akses usaha menggunakan akun pemilik yang terdaftar.',
                 ),
                 if (state.status == AuthStatus.failure && state.message != null)
-                  RequestError(message: state.message!),
+                  GawenRequestError(message: state.message!),
                 Form(
                   key: _formKey,
                   child: Column(
@@ -219,18 +219,10 @@ class _LoginPageState extends State<LoginPage> {
                       SizedBox(height: 18),
                       SizedBox(
                         width: double.infinity,
-                        child: FilledButton(
-                          onPressed: loading ? null : _submit,
-                          child: loading
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Text('Masuk'),
+                        child: GawenPrimaryButton(
+                          label: 'Masuk',
+                          onPressed: _submit,
+                          isLoading: loading,
                         ),
                       ),
                     ],

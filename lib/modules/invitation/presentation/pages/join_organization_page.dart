@@ -85,13 +85,13 @@ class _JoinOrganizationPageState extends State<JoinOrganizationPage> {
                       'Masukkan kode bisnis 8 karakter yang diberikan pemilik usaha.',
                 ),
                 if (!authenticated)
-                  RequestError(
+                  GawenRequestError(
                     message:
                         'Masuk ke akun karyawan terlebih dahulu untuk mengajukan permintaan bergabung.',
                   ),
                 if (state.status == InvitationStatus.failure &&
                     state.message != null)
-                  RequestError(message: state.message!),
+                  GawenRequestError(message: state.message!),
                 Form(
                   key: _formKey,
                   child: GawenTextField(
@@ -121,18 +121,11 @@ class _JoinOrganizationPageState extends State<JoinOrganizationPage> {
                 const SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity,
-                  child: FilledButton(
-                    onPressed: loading || !authenticated ? null : _submit,
-                    child: loading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Text('Lanjutkan'),
+                  child: GawenPrimaryButton(
+                    label: 'Lanjutkan',
+                    onPressed: _submit,
+                    isLoading: loading,
+                    enabled: authenticated,
                   ),
                 ),
                 const Padding(

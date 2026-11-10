@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
+import 'gawen_text.dart';
 
 class PageHeader extends StatelessWidget {
   const PageHeader({super.key, this.title = '', this.onBack});
@@ -10,7 +11,7 @@ class PageHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SizedBox(
-    height: 66,
+    height: GawenSpacing.xxl * 2,
     child: Row(
       children: [
         IconButton(
@@ -21,19 +22,13 @@ class PageHeader extends StatelessWidget {
             backgroundColor: Colors.white,
             side: const BorderSide(color: GawenColors.border),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(GawenRadius.md),
             ),
-            fixedSize: const Size(42, 42),
+            fixedSize: const Size(GawenSpacing.xxl + 10, GawenSpacing.xxl + 10),
           ),
         ),
-        Expanded(
-          child: Text(
-            title,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontWeight: FontWeight.w700),
-          ),
-        ),
-        const SizedBox(width: 42),
+        Expanded(child: GawenSectionTitle(title, textAlign: TextAlign.center)),
+        const SizedBox(width: GawenSpacing.xxl + 10),
       ],
     ),
   );

@@ -2,8 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/core/router/route_names.dart';
 import 'package:frontend/core/theme/app_theme.dart';
-import 'package:frontend/core/widgets/gawen_image.dart';
-import 'package:frontend/core/widgets/request_error.dart';
+import 'package:frontend/core/widgets/gawen_avatar.dart';
 import 'package:frontend/modules/employee/domain/entities/employee_entity.dart';
 import 'package:frontend/modules/employee/presentation/widgets/employee_status_badge.dart';
 import 'package:go_router/go_router.dart';
@@ -30,7 +29,9 @@ class StatusFilterChip extends StatelessWidget {
       showCheckmark: false,
       selectedColor: GawenColors.primary,
       labelStyle: TextStyle(
-        color: filterStatus == status ? GawenColors.primarySoft : GawenColors.text,
+        color: filterStatus == status
+            ? GawenColors.primarySoft
+            : GawenColors.text,
         fontWeight: filterStatus == status ? FontWeight.w700 : FontWeight.w400,
       ),
       shape: RoundedRectangleBorder(
@@ -38,17 +39,18 @@ class StatusFilterChip extends StatelessWidget {
         side: const BorderSide(color: GawenColors.border),
       ),
       onSelected: (selected) {
-        if (selected)
+        if (selected) {
           onFilterChanged(status);
-        else
+        } else {
           onFilterChanged(null);
+        }
       },
     );
   }
 }
 
 class EmployeeListTile extends StatelessWidget {
-  const EmployeeListTile({required this.employee});
+  const EmployeeListTile({required this.employee, super.key});
 
   final EmployeeEntity employee;
 
@@ -56,14 +58,7 @@ class EmployeeListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(vertical: 3, horizontal: 2),
-      leading: ClipOval(
-        child: GawenImage(
-          source: employee.photoProfile,
-          width: 44,
-          height: 44,
-          fit: BoxFit.cover,
-        ),
-      ),
+      leading: GawenAvatar(imageUrl: employee.photoProfile, size: 44),
       title: Text(employee.name, maxLines: 1, overflow: TextOverflow.ellipsis),
       subtitle: Text(
         employee.position?.trim().isNotEmpty == true
@@ -84,41 +79,8 @@ class EmployeeListTile extends StatelessWidget {
   }
 }
 
-class EmptyCard extends StatelessWidget {
-  const EmptyCard({required this.text});
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    margin: const EdgeInsets.only(top: 10),
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      border: Border.all(color: GawenColors.border),
-      borderRadius: BorderRadius.circular(20),
-    ),
-    child: Text(text, style: const TextStyle(color: GawenColors.muted)),
-  );
-}
-
-class RetryMessage extends StatelessWidget {
-  const RetryMessage({required this.message, required this.onRetry});
-
-  final String message;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) => Column(
-    children: [
-      RequestError(message: message),
-      TextButton(onPressed: onRetry, child: const Text('Coba lagi')),
-    ],
-  );
-}
-
 class EmployeeAccessDenied extends StatelessWidget {
-  const EmployeeAccessDenied();
+  const EmployeeAccessDenied({super.key});
 
   @override
   Widget build(BuildContext context) => const Scaffold(

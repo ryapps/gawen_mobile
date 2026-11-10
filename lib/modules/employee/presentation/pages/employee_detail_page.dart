@@ -6,7 +6,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/route_names.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../../core/widgets/gawen_image.dart';
+import '../../../../core/widgets/gawen_avatar.dart';
+import '../../../../core/widgets/gawen_loading.dart';
 import '../../../../core/widgets/request_error.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../domain/entities/employee_entity.dart';
@@ -50,12 +51,9 @@ class _EmployeeDetailPageState extends State<EmployeeDetailPage> {
             : null;
         final loading = state.detailStatus == EmployeeDetailStatus.loading;
         return Scaffold(
-          appBar: CustomAppBar(
-            title: 'Detail Karyawan',
-            isLeadingEnabled: true,
-          ),
+          appBar: GawenAppBar(title: 'Detail Karyawan', isLeadingEnabled: true),
           body: loading && employee == null
-              ? const Center(child: CircularProgressIndicator())
+              ? const GawenLoading()
               : employee == null
               ? _LoadFailure(
                   message: state.detailMessage ?? 'Karyawan tidak ditemukan.',
@@ -65,13 +63,9 @@ class _EmployeeDetailPageState extends State<EmployeeDetailPage> {
                   padding: const EdgeInsets.all(22),
                   children: [
                     Center(
-                      child: ClipOval(
-                        child: GawenImage(
-                          source: employee.photoProfile,
-                          width: 92,
-                          height: 92,
-                          fit: BoxFit.cover,
-                        ),
+                      child: GawenAvatar(
+                        imageUrl: employee.photoProfile,
+                        size: 92,
                       ),
                     ),
                     const SizedBox(height: 14),
@@ -121,6 +115,7 @@ class _EmployeeDetailPageState extends State<EmployeeDetailPage> {
                             icon: CupertinoIcons.clock,
                             label: 'Tanggal bergabung',
                             value: _joinedAt(employee.joinedAt),
+                            isLast: true,
                           ),
                         ],
                       ),
@@ -152,7 +147,7 @@ class _EmployeeDetailPageState extends State<EmployeeDetailPage> {
 
                     if (state.status == EmployeeStatus.failure &&
                         state.message != null)
-                      RequestError(message: state.message!),
+                      GawenRequestError(message: state.message!),
                   ],
                 ),
         );
@@ -281,7 +276,7 @@ class _LoadFailure extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          RequestError(message: message),
+          GawenRequestError(message: message),
           TextButton(onPressed: onRetry, child: const Text('Coba lagi')),
         ],
       ),

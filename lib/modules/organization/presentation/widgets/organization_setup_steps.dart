@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 
 import '../../../../core/widgets/gawen_text_field.dart';
+import '../../../../core/widgets/gawen_avatar.dart';
 import '../../../../core/widgets/gawen_image.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/organization_business_type.dart';
@@ -336,14 +337,7 @@ class PersonalProfileStep extends StatelessWidget {
                         ),
                       )
                     : photoProfile.text.trim().isNotEmpty
-                    ? ClipOval(
-                        child: GawenImage(
-                          source: photoProfile.text,
-                          width: 78,
-                          height: 78,
-                          fit: BoxFit.cover,
-                        ),
-                      )
+                    ? GawenAvatar(imageUrl: photoProfile.text, size: 78)
                     : const Icon(
                         Icons.person_outline,
                         size: 38,
@@ -446,7 +440,7 @@ class BusinessInformationStep extends StatelessWidget {
                 filled: true,
               ),
               menuStyle: MenuStyle(
-                backgroundColor: MaterialStateProperty.all(Colors.white),
+                backgroundColor: WidgetStateProperty.all(Colors.white),
               ),
               hintText: 'Pilih jenis usaha',
               dropdownMenuEntries: OrganizationBusinessType.values

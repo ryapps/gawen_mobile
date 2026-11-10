@@ -7,6 +7,7 @@ class GawenImage extends StatelessWidget {
     this.height,
     this.fit,
     this.borderRadius,
+    this.assetFallback = fallbackAsset,
     super.key,
   });
 
@@ -17,6 +18,7 @@ class GawenImage extends StatelessWidget {
   final double? height;
   final BoxFit? fit;
   final BorderRadius? borderRadius;
+  final String? assetFallback;
 
   @override
   Widget build(BuildContext context) {
@@ -42,13 +44,19 @@ class GawenImage extends StatelessWidget {
     return ClipRRect(borderRadius: borderRadius!, child: child);
   }
 
-  Image _fallback() => Image.asset(
-    fallbackAsset,
-    width: width,
-    height: height,
-    fit: fit,
-    errorBuilder: (_, _, _) => SizedBox(width: width, height: height),
-  );
+  Widget _fallback() {
+    final asset = assetFallback;
+    if (asset == null || asset.isEmpty) {
+      return SizedBox(width: width, height: height);
+    }
+    return Image.asset(
+      asset,
+      width: width,
+      height: height,
+      fit: fit,
+      errorBuilder: (_, _, _) => SizedBox(width: width, height: height),
+    );
+  }
 
   bool _isNetworkUrl(String value) {
     final uri = Uri.tryParse(value);

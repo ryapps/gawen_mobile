@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
+import 'gawen_text.dart';
 
 class ScreenIntro extends StatelessWidget {
   const ScreenIntro({
@@ -28,19 +29,14 @@ class ScreenIntro extends StatelessWidget {
             fontWeight: FontWeight.w800,
           ),
         ),
-        const SizedBox(height: 11),
+        const SizedBox(height: GawenSpacing.md),
       ],
-      Text(
+      GawenTitle(
         title,
-        style: const TextStyle(
-          fontSize: 26,
-          height: 1.25,
-          letterSpacing: -.7,
-          fontWeight: FontWeight.w800,
-        ),
+        style: const TextStyle(fontSize: 26, letterSpacing: -.7),
       ),
-      const SizedBox(height: 8),
-      Text(
+      const SizedBox(height: GawenSpacing.sm),
+      GawenBodyText(
         description,
         style: const TextStyle(
           color: GawenColors.muted,

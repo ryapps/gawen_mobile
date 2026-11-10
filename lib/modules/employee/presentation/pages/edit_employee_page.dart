@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
+import 'package:frontend/core/widgets/app_bar.dart';
+import 'package:frontend/core/widgets/gawen_text.dart';
+import '../../../../core/widgets/gawen_button.dart';
+import '../../../../core/widgets/gawen_loading.dart';
 import '../../../../core/widgets/gawen_text_field.dart';
 import '../../../../core/widgets/request_error.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
@@ -91,9 +94,9 @@ class _EditEmployeePageState extends State<EditEmployeePage> {
             state.detailStatus == EmployeeDetailStatus.loading &&
             employee == null;
         return Scaffold(
-          appBar: AppBar(title: const Text('Edit Informasi Pekerjaan')),
+          appBar: GawenAppBar(title: 'Edit Informasi Pekerjaan', isLeadingEnabled: true),
           body: loading
-              ? const Center(child: CircularProgressIndicator())
+              ? const GawenLoading()
               : employee == null
               ? Center(
                   child: Padding(
@@ -101,7 +104,7 @@ class _EditEmployeePageState extends State<EditEmployeePage> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        RequestError(
+                        GawenRequestError(
                           message:
                               state.detailMessage ??
                               'Informasi karyawan tidak tersedia.',
@@ -121,9 +124,8 @@ class _EditEmployeePageState extends State<EditEmployeePage> {
                   child: ListView(
                     padding: const EdgeInsets.all(22),
                     children: [
-                      const Text(
+                      const GawenBodyText(
                         'Ubah jabatan karyawan. Informasi profil pribadi dikelola oleh karyawan.',
-                        style: TextStyle(height: 1.5),
                       ),
                       GawenTextField(
                         controller: _positionController,
@@ -134,20 +136,12 @@ class _EditEmployeePageState extends State<EditEmployeePage> {
                         textCapitalization: TextCapitalization.words,
                         validator: _validatePosition,
                       ),
-                      if (_error != null) RequestError(message: _error!),
+                      if (_error != null) GawenRequestError(message: _error!),
                       const SizedBox(height: 24),
-                      FilledButton(
-                        onPressed: _saving ? null : _save,
-                        child: _saving
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Text('Simpan perubahan'),
+                      GawenPrimaryButton(
+                        label: 'Simpan perubahan',
+                        onPressed: _save,
+                        isLoading: _saving,
                       ),
                     ],
                   ),

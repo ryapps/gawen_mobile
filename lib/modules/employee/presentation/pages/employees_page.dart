@@ -6,7 +6,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend/core/router/route_names.dart';
 import 'package:frontend/core/theme/app_theme.dart';
 import 'package:frontend/core/widgets/app_bar.dart';
+import 'package:frontend/core/widgets/gawen_empty_state.dart';
+import 'package:frontend/core/widgets/gawen_loading.dart';
+import 'package:frontend/core/widgets/gawen_button.dart';
 import 'package:frontend/core/widgets/main_navigation.dart';
+import 'package:frontend/core/widgets/request_error.dart';
+import 'package:frontend/core/widgets/gawen_text.dart';
 import 'package:frontend/modules/auth/presentation/bloc/auth_bloc.dart';
 import 'package:frontend/modules/employee/domain/entities/employee_entity.dart';
 import 'package:frontend/modules/employee/presentation/bloc/employee_bloc.dart';
@@ -136,7 +141,7 @@ class _EmployeesPageState extends State<EmployeesPage> {
         final initialLoading =
             state.listStatus == EmployeeListStatus.loading && employees.isEmpty;
         return Scaffold(
-          appBar: CustomAppBar(
+          appBar: GawenAppBar(
             title: 'Karyawan',
             subtitle: '${employees.length} anggota • $activeCount aktif',
             action: TextButton.icon(
@@ -212,34 +217,41 @@ class _EmployeesPageState extends State<EmployeesPage> {
                   ),
                   const Padding(
                     padding: EdgeInsets.only(top: 18, bottom: 4),
-                    child: Text(
-                      'Daftar Karyawan',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
+                    child: GawenSectionTitle('Daftar Karyawan'),
                   ),
                   if (state.listStatus == EmployeeListStatus.failure)
-                    RetryMessage(
+                    GawenRequestError(
                       message:
                           state.listMessage ?? 'Data karyawan gagal dimuat.',
                       onRetry: _reload,
                     ),
                   if (initialLoading)
                     const Padding(
-                      padding: EdgeInsets.all(28),
-                      child: Center(child: CircularProgressIndicator()),
+                      padding: EdgeInsets.all(GawenSpacing.xl),
+                      child: GawenLoading(),
                     )
                   else ...[
                     if (employees.isEmpty)
-                      EmptyCard(
-                        text: state.listStatus == EmployeeListStatus.failure
-                            ? 'Karyawan tidak dapat dimuat.'
-                            : state.search.isNotEmpty ||
-                                  state.filterStatus != null
-                            ? 'Tidak ada karyawan yang sesuai.'
-                            : 'Belum ada karyawan. Undang anggota tim untuk mulai bekerja bersama.',
+                      GawenEmptyState(
+                        icon:
+                            state.search.isNotEmpty ||
+                                state.filterStatus != null
+                            ? Icons.search_off_rounded
+                            : Icons.people_outline_rounded,
+                        title:
+                            state.search.isNotEmpty ||
+                                state.filterStatus != null
+                            ? 'Karyawan tidak ditemukan'
+                            : state.listStatus == EmployeeListStatus.failure
+                            ? 'Karyawan tidak dapat dimuat'
+                            : 'Belum ada karyawan',
+                        description:
+                            state.search.isNotEmpty ||
+                                state.filterStatus != null
+                            ? 'Coba ubah kata kunci atau filter pencarian.'
+                            : state.listStatus == EmployeeListStatus.failure
+                            ? state.listMessage
+                            : 'Undang anggota tim untuk mulai bekerja bersama.',
                       )
                     else
                       ...employees.map(
@@ -248,21 +260,15 @@ class _EmployeesPageState extends State<EmployeesPage> {
                     if (state.listStatus == EmployeeListStatus.loadingMore)
                       const Padding(
                         padding: EdgeInsets.all(16),
-                        child: Center(
-                          child: SizedBox(
-                            width: 22,
-                            height: 22,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                        ),
+                        child: GawenLoading(size: 22, strokeWidth: 2),
                       ),
                     if (state.listStatus == EmployeeListStatus.failure &&
                         employees.isNotEmpty)
-                      TextButton(
+                      GawenTextButton(
+                        label: 'Coba muat halaman berikutnya lagi',
                         onPressed: () => context.read<EmployeeBloc>().add(
                           const ManagedEmployeesLoadMoreRequested(),
                         ),
-                        child: const Text('Coba muat halaman berikutnya lagi'),
                       ),
                   ],
                 ],

@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:frontend/core/widgets/app_bar.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:frontend/modules/organization/presentation/validators/edit_organization_validator.dart';
@@ -190,10 +189,10 @@ class _EditOrganizationPageState extends State<EditOrganizationPage> {
     return Scaffold(
       appBar: widget.isSetup
           ? null
-          : CustomAppBar(title: 'Pengaturan Perusahaan', isLeadingEnabled: true),
+          : GawenAppBar(title: 'Pengaturan Perusahaan', isLeadingEnabled: true),
       body: SafeArea(
         child: _loading
-            ? const Center(child: CircularProgressIndicator())
+            ? const GawenLoading()
             : widget.isSetup
             ? Column(
                 children: [
@@ -219,7 +218,7 @@ class _EditOrganizationPageState extends State<EditOrganizationPage> {
                           description: _descriptions[_step],
                           icon: _stepIcons[_step],
                         ),
-                        if (_error != null) RequestError(message: _error!),
+                        if (_error != null) GawenRequestError(message: _error!),
                         Form(key: _formKey, child: _activeStep()),
                       ],
                     ),
@@ -256,14 +255,13 @@ class _EditOrganizationPageState extends State<EditOrganizationPage> {
                     title: 'Perbarui informasi perusahaan',
                     description: 'Perubahan disimpan ke profil perusahaan.',
                   ),
-                  if (_error != null) RequestError(message: _error!),
+                  if (_error != null) GawenRequestError(message: _error!),
                   Form(key: _formKey, child: _activeStep()),
                   const SizedBox(height: 24),
-                  FilledButton(
-                    onPressed: _saving ? null : _saveOrganization,
-                    child: _saving
-                        ? const CircularProgressIndicator()
-                        : const Text('Simpan Perubahan'),
+                  GawenPrimaryButton(
+                    label: 'Simpan Perubahan',
+                    onPressed: _saveOrganization,
+                    isLoading: _saving,
                   ),
                 ],
               ),

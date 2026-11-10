@@ -47,12 +47,7 @@ class JoinCodeCard extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         if (loading)
-          const Center(
-            child: Padding(
-              padding: EdgeInsets.all(12),
-              child: CircularProgressIndicator(),
-            ),
-          )
+          const Padding(padding: EdgeInsets.all(12), child: GawenLoading())
         else if (code != null)
           Container(
             width: double.infinity,
@@ -83,9 +78,9 @@ class JoinCodeCard extends StatelessWidget {
             ),
           )
         else if (message != null)
-          RequestError(message: message!)
+          GawenRequestError(message: message!)
         else
-          const RequestError(
+          const GawenRequestError(
             message:
                 'Kode aktif tidak dapat ditampilkan di perangkat ini. Generate kode baru untuk menggantikan kode lama.',
           ),
@@ -101,18 +96,18 @@ class JoinCodeCard extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: OutlinedButton.icon(
+                child: GawenOutlinedButton(
+                  label: 'Salin Kode',
                   onPressed: onCopy,
-                  icon: const Icon(Icons.copy_outlined),
-                  label: const Text('Salin Kode'),
+                  icon: Icons.copy_outlined,
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: FilledButton.icon(
+                child: GawenPrimaryButton(
+                  label: 'Bagikan',
                   onPressed: onShare,
-                  icon: const Icon(Icons.share_outlined),
-                  label: const Text('Bagikan'),
+                  icon: Icons.share_outlined,
                 ),
               ),
             ],
@@ -122,19 +117,11 @@ class JoinCodeCard extends StatelessWidget {
         if (code == null && !loading)
           SizedBox(
             width: double.infinity,
-            child: FilledButton.icon(
-              onPressed: rotating ? null : onGenerate,
-              icon: rotating
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Icon(Icons.key_outlined),
-              label: const Text('Buat Kode Bergabung'),
+            child: GawenPrimaryButton(
+              label: 'Buat Kode Bergabung',
+              onPressed: onGenerate,
+              icon: Icons.key_outlined,
+              isLoading: rotating,
             ),
           )
         else if (code != null)
@@ -158,9 +145,9 @@ class JoinCodeCard extends StatelessWidget {
         if (message != null && code == null && !loading)
           Align(
             alignment: Alignment.center,
-            child: TextButton(
+            child: GawenTextButton(
+              label: 'Coba muat ulang',
               onPressed: onRetry,
-              child: const Text('Coba muat ulang'),
             ),
           ),
       ],

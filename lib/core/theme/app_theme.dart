@@ -9,8 +9,58 @@ abstract final class GawenColors {
   static const muted = Color(0xFF68756C);
   static const border = Color(0xFFE3E9E4);
   static const warning = Color(0xFFE8A23A);
+  static const warningSoft = Color(0xFFFFF3E4);
   static const error = Color(0xFFD94F4F);
+  static const errorSoft = Color(0xFFFFF0F0);
   static const info = Color(0xFF3478D4);
+  static const surface = Colors.white;
+}
+
+abstract final class GawenSpacing {
+  static const xs = 4.0;
+  static const sm = 8.0;
+  static const md = 12.0;
+  static const lg = 16.0;
+  static const xl = 24.0;
+  static const xxl = 32.0;
+}
+
+abstract final class GawenRadius {
+  static const sm = 8.0;
+  static const md = 12.0;
+  static const lg = 16.0;
+  static const xl = 20.0;
+  static const pill = 999.0;
+}
+
+abstract final class GawenTextStyles {
+  static const title = TextStyle(
+    color: GawenColors.text,
+    fontSize: 24,
+    height: 1.25,
+    fontWeight: FontWeight.w800,
+    letterSpacing: -0.5,
+  );
+  static const sectionTitle = TextStyle(
+    color: GawenColors.text,
+    fontSize: 16,
+    fontWeight: FontWeight.w800,
+  );
+  static const body = TextStyle(
+    color: GawenColors.text,
+    fontSize: 14,
+    height: 1.5,
+  );
+  static const caption = TextStyle(
+    color: GawenColors.muted,
+    fontSize: 12,
+    height: 1.4,
+  );
+  static const label = TextStyle(
+    color: GawenColors.text,
+    fontSize: 14,
+    fontWeight: FontWeight.w700,
+  );
 }
 
 class AppTheme {

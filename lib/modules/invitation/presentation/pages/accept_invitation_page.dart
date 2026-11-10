@@ -120,15 +120,15 @@ class _AcceptInvitationPageState extends State<AcceptInvitationPage> {
                       'Tempel token undangan dari tautan yang diberikan pemilik usaha. Detail undangan akan dikonfirmasi oleh server saat diterima.',
                 ),
                 if (!authenticated)
-                  RequestError(
+                  GawenRequestError(
                     message:
                         'Masuk dengan alamat email yang menerima undangan sebelum menerimanya.',
                   ),
                 if (state.status == InvitationStatus.failure &&
                     state.message != null)
-                  RequestError(message: state.message!),
+                  GawenRequestError(message: state.message!),
                 if (state.status == InvitationStatus.accepted)
-                  const RequestError(
+                  const GawenRequestError(
                     message:
                         'Undangan diterima. Sedang memverifikasi akses organisasi.',
                   ),
@@ -152,22 +152,12 @@ class _AcceptInvitationPageState extends State<AcceptInvitationPage> {
                 const SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity,
-                  child: FilledButton(
-                    onPressed: loading ? null : _submit,
-                    child: loading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Text(
-                            authenticated
-                                ? 'Terima Undangan'
-                                : 'Masuk dan lanjutkan',
-                          ),
+                  child: GawenPrimaryButton(
+                    label: authenticated
+                        ? 'Terima Undangan'
+                        : 'Masuk dan lanjutkan',
+                    onPressed: _submit,
+                    isLoading: loading,
                   ),
                 ),
                 if (!authenticated)

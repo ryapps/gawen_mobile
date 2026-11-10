@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/gawen_loading.dart';
 import '../../domain/entities/administrative_region.dart';
 import '../bloc/region_bloc.dart';
 
@@ -137,11 +138,7 @@ class OrganizationRegionFields extends StatelessWidget {
             enabled: enabled && !isLoading,
             width: MediaQuery.sizeOf(context).width - 48,
             trailingIcon: isLoading
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
+                ? const GawenLoading(centered: false, size: 18, strokeWidth: 2)
                 : const Icon(Icons.arrow_drop_down),
             inputDecorationTheme: const InputDecorationTheme(
               contentPadding: EdgeInsets.fromLTRB(12, 12, 12, 12),
