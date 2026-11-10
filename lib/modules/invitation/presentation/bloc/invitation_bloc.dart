@@ -20,6 +20,8 @@ class InvitationBloc extends Bloc<InvitationEvent, InvitationState> {
     on<OwnerJoinRequestDecisionRequested>(_decideOwnerRequest);
     on<EmailInvitationCreatedRequested>(_createEmailInvitation);
     on<EmailInvitationRevokedRequested>(_revokeEmailInvitation);
+    on<OwnInvitationsRefreshRequested>(_refreshOwnInvitations);
+    on<EmployeeInvitationAccepted>(_acceptEmployeeInvitation);
   }
 
   final InvitationRepository _repository;
@@ -192,7 +194,8 @@ class InvitationBloc extends Bloc<InvitationEvent, InvitationState> {
         state.copyWith(
           emailInvitationStatus: EmailInvitationStatus.ready,
           createdInvitation: invitation,
-          emailInvitationMessage: 'Undangan berhasil dibuat.',
+          emailInvitationMessage:
+              'Undangan tersedia di akun karyawan yang dipilih.',
         ),
       );
     } on ApiFailure catch (error) {
@@ -200,6 +203,68 @@ class InvitationBloc extends Bloc<InvitationEvent, InvitationState> {
         state.copyWith(
           emailInvitationStatus: EmailInvitationStatus.failure,
           emailInvitationMessage: error.message,
+        ),
+      );
+    }
+  }
+
+  Future<void> _refreshOwnInvitations(
+    OwnInvitationsRefreshRequested event,
+    Emitter<InvitationState> emit,
+  ) async {
+    if (state.invitationInboxStatus == InvitationInboxStatus.loading) return;
+    emit(
+      state.copyWith(
+        invitationInboxStatus: InvitationInboxStatus.loading,
+        invitationInboxMessage: null,
+      ),
+    );
+    try {
+      final invitations = await _repository.getOwnInvitations();
+      emit(
+        state.copyWith(
+          invitationInboxStatus: InvitationInboxStatus.ready,
+          ownInvitations: invitations,
+          invitationInboxMessage: null,
+        ),
+      );
+    } on ApiFailure catch (error) {
+      emit(
+        state.copyWith(
+          invitationInboxStatus: InvitationInboxStatus.failure,
+          invitationInboxMessage: error.message,
+        ),
+      );
+    }
+  }
+
+  Future<void> _acceptEmployeeInvitation(
+    EmployeeInvitationAccepted event,
+    Emitter<InvitationState> emit,
+  ) async {
+    if (state.invitationInboxStatus == InvitationInboxStatus.mutating) return;
+    emit(
+      state.copyWith(
+        invitationInboxStatus: InvitationInboxStatus.mutating,
+        invitationInboxMessage: null,
+      ),
+    );
+    try {
+      await _repository.acceptInvitationById(event.invitationId);
+      emit(
+        state.copyWith(
+          invitationInboxStatus: InvitationInboxStatus.accepted,
+          ownInvitations: state.ownInvitations
+              .where((invitation) => invitation.id != event.invitationId)
+              .toList(growable: false),
+          invitationInboxMessage: 'Undangan berhasil diterima.',
+        ),
+      );
+    } on ApiFailure catch (error) {
+      emit(
+        state.copyWith(
+          invitationInboxStatus: InvitationInboxStatus.failure,
+          invitationInboxMessage: error.message,
         ),
       );
     }

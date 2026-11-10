@@ -7,6 +7,15 @@ enum OwnerJoinRequestsStatus { initial, loading, ready, mutating, failure }
 
 enum EmailInvitationStatus { initial, mutating, ready, failure }
 
+enum InvitationInboxStatus {
+  initial,
+  loading,
+  ready,
+  mutating,
+  accepted,
+  failure,
+}
+
 class InvitationState {
   const InvitationState({
     this.status = InvitationStatus.initial,
@@ -18,6 +27,9 @@ class InvitationState {
     this.emailInvitationStatus = EmailInvitationStatus.initial,
     this.createdInvitation,
     this.emailInvitationMessage,
+    this.invitationInboxStatus = InvitationInboxStatus.initial,
+    this.ownInvitations = const [],
+    this.invitationInboxMessage,
   });
 
   final InvitationStatus status;
@@ -29,6 +41,9 @@ class InvitationState {
   final EmailInvitationStatus emailInvitationStatus;
   final CreatedInvitation? createdInvitation;
   final String? emailInvitationMessage;
+  final InvitationInboxStatus invitationInboxStatus;
+  final List<InvitationEntity> ownInvitations;
+  final String? invitationInboxMessage;
 
   InvitationState copyWith({
     InvitationStatus? status,
@@ -41,6 +56,9 @@ class InvitationState {
     CreatedInvitation? createdInvitation,
     String? emailInvitationMessage,
     bool clearCreatedInvitation = false,
+    InvitationInboxStatus? invitationInboxStatus,
+    List<InvitationEntity>? ownInvitations,
+    String? invitationInboxMessage,
   }) => InvitationState(
     status: status ?? this.status,
     requests: requests ?? this.requests,
@@ -53,5 +71,8 @@ class InvitationState {
         ? null
         : createdInvitation ?? this.createdInvitation,
     emailInvitationMessage: emailInvitationMessage,
+    invitationInboxStatus: invitationInboxStatus ?? this.invitationInboxStatus,
+    ownInvitations: ownInvitations ?? this.ownInvitations,
+    invitationInboxMessage: invitationInboxMessage,
   );
 }

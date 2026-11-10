@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend/core/router/route_names.dart';
@@ -19,6 +21,18 @@ class _JoinOrganizationPageState extends State<JoinOrganizationPage> {
   final _codeController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && context.read<AuthBloc>().state.hasVerifiedSession) {
+        context.read<InvitationBloc>().add(
+          const OwnInvitationsRefreshRequested(),
+        );
+      }
+    });
+  }
+
+  @override
   void dispose() {
     _codeController.dispose();
     super.dispose();
@@ -32,14 +46,53 @@ class _JoinOrganizationPageState extends State<JoinOrganizationPage> {
     );
   }
 
+  Future<void> _restoreAfterInvitationAcceptance() async {
+    final authBloc = context.read<AuthBloc>();
+    if (authBloc.state.status == AuthStatus.loading ||
+        authBloc.state.status == AuthStatus.restoring) {
+      await authBloc.stream.firstWhere(
+        (next) =>
+            next.status != AuthStatus.loading &&
+            next.status != AuthStatus.restoring,
+      );
+    }
+    final loading = authBloc.stream.firstWhere(
+      (next) =>
+          next.status == AuthStatus.loading ||
+          next.status == AuthStatus.restoring,
+    );
+    authBloc.add(const SessionRestoreRequested());
+    await loading;
+    final restored = await authBloc.stream.firstWhere(
+      (next) =>
+          next.status != AuthStatus.loading &&
+          next.status != AuthStatus.restoring,
+    );
+    if (!mounted) return;
+    if (restored.status == AuthStatus.authenticated &&
+        restored.membershipAccess == MembershipAccess.active) {
+      context.go(AppRoutes.home);
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          restored.message ??
+              'Undangan diterima, tetapi status keanggotaan belum dapat diverifikasi. Coba periksa kembali.',
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(
     BuildContext context,
   ) => BlocConsumer<InvitationBloc, InvitationState>(
     listenWhen: (previous, current) =>
-        previous.status != current.status &&
-        (current.status == InvitationStatus.submitted ||
-            current.status == InvitationStatus.accepted),
+        (previous.status != current.status &&
+            current.status == InvitationStatus.submitted) ||
+        (previous.invitationInboxStatus != current.invitationInboxStatus &&
+            current.invitationInboxStatus == InvitationInboxStatus.accepted),
     listener: (context, state) {
       if (state.status == InvitationStatus.submitted) {
         context.read<AuthBloc>().add(const SessionRestoreRequested());
@@ -49,6 +102,8 @@ class _JoinOrganizationPageState extends State<JoinOrganizationPage> {
           ),
         );
         context.go(AppRoutes.requests);
+      } else {
+        unawaited(_restoreAfterInvitationAcceptance());
       }
     },
     builder: (context, state) {
@@ -84,6 +139,18 @@ class _JoinOrganizationPageState extends State<JoinOrganizationPage> {
                   description:
                       'Masukkan kode bisnis 8 karakter yang diberikan pemilik usaha.',
                 ),
+                if (authenticated) ...[
+                  _OwnInvitationsSection(
+                    state: state,
+                    onRefresh: () => context.read<InvitationBloc>().add(
+                      const OwnInvitationsRefreshRequested(),
+                    ),
+                    onAccept: (invitationId) => context
+                        .read<InvitationBloc>()
+                        .add(EmployeeInvitationAccepted(invitationId)),
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 if (!authenticated)
                   GawenRequestError(
                     message:
@@ -128,33 +195,6 @@ class _JoinOrganizationPageState extends State<JoinOrganizationPage> {
                     enabled: authenticated,
                   ),
                 ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 20),
-                  child: Row(
-                    children: [
-                      Expanded(child: Divider(color: GawenColors.border)),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 10),
-                        child: Text(
-                          'atau',
-                          style: TextStyle(
-                            color: GawenColors.muted,
-                            fontSize: 11,
-                          ),
-                        ),
-                      ),
-                      Expanded(child: Divider(color: GawenColors.border)),
-                    ],
-                  ),
-                ),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: () => context.push(AppRoutes.invitation),
-                    icon: const Icon(Icons.mail_outline),
-                    label: const Text('Terima Undangan'),
-                  ),
-                ),
                 Center(
                   child: TextButton(
                     onPressed: () => context.push(AppRoutes.login),
@@ -168,4 +208,96 @@ class _JoinOrganizationPageState extends State<JoinOrganizationPage> {
       );
     },
   );
+}
+
+class _OwnInvitationsSection extends StatelessWidget {
+  const _OwnInvitationsSection({
+    required this.state,
+    required this.onRefresh,
+    required this.onAccept,
+  });
+
+  final InvitationState state;
+  final VoidCallback onRefresh;
+  final ValueChanged<String> onAccept;
+
+  @override
+  Widget build(BuildContext context) {
+    final loading =
+        state.invitationInboxStatus == InvitationInboxStatus.loading;
+    final accepting =
+        state.invitationInboxStatus == InvitationInboxStatus.mutating;
+    return GawenCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Undangan untukmu',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                ),
+              ),
+              IconButton(
+                onPressed: loading ? null : onRefresh,
+                tooltip: 'Muat ulang undangan',
+                icon: const Icon(Icons.refresh),
+              ),
+            ],
+          ),
+          if (loading)
+            const GawenLoading(size: 24)
+          else if (state.invitationInboxStatus == InvitationInboxStatus.failure)
+            GawenRequestError(
+              message: state.invitationInboxMessage ?? 'Undangan gagal dimuat.',
+              onRetry: onRefresh,
+            )
+          else if (state.ownInvitations.isEmpty)
+            const Text(
+              'Belum ada undangan untuk bergabung.',
+              style: TextStyle(color: GawenColors.muted),
+            )
+          else
+            ...state.ownInvitations.map(
+              (invitation) => Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: GawenColors.background,
+                    borderRadius: BorderRadius.circular(GawenRadius.md),
+                    border: Border.all(color: GawenColors.border),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        invitation.organizationName ?? 'Undangan organisasi',
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Berlaku sampai ${invitation.expiresAt.toLocal()}',
+                        style: const TextStyle(
+                          color: GawenColors.muted,
+                          fontSize: 12,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      GawenPrimaryButton(
+                        label: 'Terima Undangan',
+                        onPressed: () => onAccept(invitation.id),
+                        isLoading: accepting,
+                        enabled: !accepting,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 }

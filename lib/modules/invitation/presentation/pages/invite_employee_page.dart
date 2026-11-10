@@ -209,36 +209,22 @@ class _InviteEmployeePageState extends State<InviteEmployeePage> {
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Undangan berhasil dibuat'),
+        title: const Text('Undangan tersedia'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Bagikan token ini kepada karyawan melalui kanal yang aman. Token hanya ditampilkan pada respons pembuatan undangan.',
+            Text(
+              'Undangan untuk ${created.invitation.email} sekarang tersedia di halaman Gabung ke Tempat Kerja pada akun Gawen penerima.',
             ),
             const SizedBox(height: 12),
-            SelectableText(created.token),
-            const SizedBox(height: 10),
             Text(
-              'Berlaku sampai ${created.invitation.expiresAt}',
+              'Berlaku sampai ${created.invitation.expiresAt.toLocal()}',
               style: const TextStyle(color: GawenColors.muted, fontSize: 12),
             ),
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () async {
-              try {
-                await Clipboard.setData(ClipboardData(text: created.token));
-                if (dialogContext.mounted) Navigator.pop(dialogContext);
-                if (mounted) _showMessage('Token undangan disalin.');
-              } on PlatformException {
-                if (mounted) _showMessage('Token tidak dapat disalin.');
-              }
-            },
-            child: const Text('Salin token'),
-          ),
           TextButton(
             onPressed: () async {
               final organizationId = context
@@ -303,12 +289,17 @@ class _EmailInvitationSection extends StatelessWidget {
   Widget build(BuildContext context) => Card(
     child: ExpansionTile(
       leading: const Icon(Icons.mail_outline),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8), side: BorderSide(width:0)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(width: 0),
+      ),
       title: const Text(
         'Undang lewat email',
         style: TextStyle(fontWeight: FontWeight.w700),
       ),
-      subtitle: const Text('Buat undangan khusus untuk satu alamat email.'),
+      subtitle: const Text(
+        'Undangan akan tampil di akun Gawen dengan alamat email ini.',
+      ),
       childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       children: [
         if (state.emailInvitationStatus == EmailInvitationStatus.failure)
@@ -338,7 +329,7 @@ class _EmailInvitationSection extends StatelessWidget {
         SizedBox(
           width: double.infinity,
           child: GawenPrimaryButton(
-            label: 'Buat Undangan Email',
+            label: 'Buat Undangan',
             onPressed: onSubmit,
             isLoading:
                 state.emailInvitationStatus == EmailInvitationStatus.mutating,

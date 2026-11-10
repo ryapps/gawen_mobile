@@ -339,9 +339,35 @@ void main() {
                   'email': 'ayu@example.com',
                   'expiresAt': '2026-10-08T10:00:00.000Z',
                   'createdAt': '2026-10-01T10:00:00.000Z',
-                  'token': 'one-time-token',
                 },
               },
+            };
+          }
+          if (options.path.endsWith('/invitations/me')) {
+            expect(options.method, 'GET');
+            return {
+              'status': 'ok',
+              'data': {
+                'invitations': [
+                  {
+                    'id': 'invitation-1',
+                    'email': 'ayu@example.com',
+                    'expiresAt': '2026-10-08T10:00:00.000Z',
+                    'createdAt': '2026-10-01T10:00:00.000Z',
+                    'organization': {
+                      'id': 'organization-1',
+                      'name': 'Kedai Gawen',
+                    },
+                  },
+                ],
+              },
+            };
+          }
+          if (options.path.endsWith('/invitations/invitation-1/accept')) {
+            expect(options.method, 'POST');
+            return {
+              'status': 'ok',
+              'data': {'status': 'ACCEPTED'},
             };
           }
           return {'status': 'ok', 'data': {}};
@@ -358,6 +384,8 @@ void main() {
         organizationId: 'organization-1',
         email: 'ayu@example.com',
       );
+      final ownInvitations = await repository.getOwnInvitations();
+      await repository.acceptInvitationById('invitation-1');
       await repository.revokeEmailInvitation(
         organizationId: 'organization-1',
         invitationId: invitation.invitation.id,
@@ -365,7 +393,7 @@ void main() {
 
       expect(pending.single.user?.name, 'Budi');
       expect(invitation.invitation.id, 'invitation-1');
-      expect(invitation.token, 'one-time-token');
+      expect(ownInvitations.single.organizationName, 'Kedai Gawen');
     },
   );
 

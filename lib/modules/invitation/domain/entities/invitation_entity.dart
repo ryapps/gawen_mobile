@@ -4,17 +4,18 @@ class InvitationEntity {
     required this.email,
     required this.expiresAt,
     required this.createdAt,
+    this.organizationName,
   });
 
   final String id;
   final String email;
   final DateTime expiresAt;
   final DateTime createdAt;
+  final String? organizationName;
 }
 
 class CreatedInvitation {
-  const CreatedInvitation({required this.invitation, required this.token});
+  const CreatedInvitation({required this.invitation});
 
   final InvitationEntity invitation;
-  final String token;
 }

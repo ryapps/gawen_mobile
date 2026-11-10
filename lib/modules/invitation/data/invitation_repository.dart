@@ -90,8 +90,34 @@ class InvitationRepository {
     final model = CreatedInvitationModel.fromJson(
       data['invitation'] as Map<String, dynamic>,
     );
-    return CreatedInvitation(invitation: model.invitation, token: model.token);
+    return CreatedInvitation(invitation: model.invitation);
   });
+
+  Future<List<InvitationEntity>> getOwnInvitations() =>
+      executeApiRequest(() async {
+        final response = await _client.get<Map<String, dynamic>>(
+          '/api/employees/invitations/me',
+        );
+        final data = response.data?['data'];
+        if (data is! Map<String, dynamic> || data['invitations'] is! List) {
+          throw const ApiFailure('Respons undangan masuk tidak valid.');
+        }
+        final entries = data['invitations'] as List;
+        if (entries.any((entry) => entry is! Map<String, dynamic>)) {
+          throw const ApiFailure('Data undangan masuk tidak valid.');
+        }
+        return entries
+            .cast<Map<String, dynamic>>()
+            .map(InvitationModel.fromJson)
+            .toList(growable: false);
+      });
+
+  Future<void> acceptInvitationById(String invitationId) =>
+      executeApiRequest(() async {
+        await _client.post<Map<String, dynamic>>(
+          '/api/employees/invitations/$invitationId/accept',
+        );
+      });
 
   Future<void> revokeEmailInvitation({
     required String organizationId,

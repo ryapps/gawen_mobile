@@ -22,6 +22,16 @@ final class InvitationAccepted extends InvitationEvent {
   final String token;
 }
 
+final class OwnInvitationsRefreshRequested extends InvitationEvent {
+  const OwnInvitationsRefreshRequested();
+}
+
+final class EmployeeInvitationAccepted extends InvitationEvent {
+  const EmployeeInvitationAccepted(this.invitationId);
+
+  final String invitationId;
+}
+
 final class OwnerJoinRequestsRefreshRequested extends InvitationEvent {
   const OwnerJoinRequestsRefreshRequested(this.organizationId);
 

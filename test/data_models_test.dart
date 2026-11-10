@@ -191,17 +191,15 @@ void main() {
     expect(request.toJson()['status'], 'PENDING');
   });
 
-  test('invitation token is isolated from the general invitation entity', () {
-    const token = 'one-time-token';
+  test('invitation model does not expose a token', () {
     final created = CreatedInvitationModel.fromJson({
       'id': 'invitation-1',
       'email': 'employee@example.com',
       'expiresAt': '2026-10-08T10:00:00.000Z',
       'createdAt': '2026-10-01T10:00:00.000Z',
-      'token': token,
     });
 
-    expect(created.token, token);
+    expect(created.invitation.id, 'invitation-1');
     expect(created.invitation.toJson().containsKey('token'), isFalse);
   });
 

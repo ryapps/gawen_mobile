@@ -6,19 +6,29 @@ class InvitationModel extends InvitationEntity {
     required super.email,
     required super.expiresAt,
     required super.createdAt,
+    super.organizationName,
   });
 
   factory InvitationModel.fromJson(Map<String, dynamic> json) {
     final id = json['id'];
     final email = json['email'];
+    final organization = json['organization'];
     if (id is! String || email is! String) {
       throw const FormatException('Data undangan tidak valid.');
+    }
+    if (organization != null &&
+        (organization is! Map<String, dynamic> ||
+            organization['name'] is! String)) {
+      throw const FormatException('Data organisasi undangan tidak valid.');
     }
     return InvitationModel(
       id: id,
       email: email,
       expiresAt: _date(json['expiresAt']),
       createdAt: _date(json['createdAt']),
+      organizationName: organization is Map<String, dynamic>
+          ? organization['name'] as String
+          : null,
     );
   }
 
@@ -27,24 +37,17 @@ class InvitationModel extends InvitationEntity {
     'email': email,
     'expiresAt': expiresAt.toIso8601String(),
     'createdAt': createdAt.toIso8601String(),
+    if (organizationName != null) 'organizationName': organizationName,
   };
 }
 
 class CreatedInvitationModel {
-  const CreatedInvitationModel({required this.invitation, required this.token});
+  const CreatedInvitationModel({required this.invitation});
 
   final InvitationModel invitation;
-  final String token;
 
   factory CreatedInvitationModel.fromJson(Map<String, dynamic> json) {
-    final token = json['token'];
-    if (token is! String || token.isEmpty) {
-      throw const FormatException('Token undangan tidak valid.');
-    }
-    return CreatedInvitationModel(
-      invitation: InvitationModel.fromJson(json),
-      token: token,
-    );
+    return CreatedInvitationModel(invitation: InvitationModel.fromJson(json));
   }
 }
 
