@@ -4,10 +4,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend/core/theme/app_theme.dart';
 import 'package:frontend/core/widgets/app_bar.dart';
 import 'package:frontend/core/widgets/gawen_avatar.dart';
-import 'package:frontend/core/widgets/gawen_button.dart';
 import 'package:frontend/core/widgets/gawen_card.dart';
 import 'package:frontend/core/widgets/gawen_empty_state.dart';
 import 'package:frontend/core/widgets/gawen_loading.dart';
+import 'package:frontend/core/widgets/gawen_popup_menu_button.dart';
 import 'package:frontend/core/widgets/gawen_status_badge.dart';
 import 'package:frontend/core/widgets/gawen_text.dart';
 import 'package:frontend/modules/auth/presentation/bloc/auth_bloc.dart';
@@ -136,10 +136,6 @@ class _OwnerJoinRequestDetailPageState
         result.ownerRequestsMessage?.startsWith('Permintaan karyawan') == true;
     if (succeeded) {
       context.pop(true);
-    } else if (result.ownerRequestsMessage != null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(result.ownerRequestsMessage!)));
     }
   }
 }
@@ -211,18 +207,27 @@ class _RequestDetails extends StatelessWidget {
         ),
 
         const SizedBox(height: 24),
-        GawenDangerButton(
-          label: 'Tolak permintaan',
-          onPressed: () => onDecision(false),
-          isLoading: busy,
-          icon: Icons.close_rounded,
-        ),
-        const SizedBox(height: 12),
-        GawenPrimaryButton(
-          label: 'Terima sebagai karyawan',
-          onPressed: () => onDecision(true),
-          isLoading: busy,
-          icon: Icons.check_rounded,
+        SizedBox(
+          width: double.infinity,
+          child: GawenPopupMenuButton<bool>(
+            enabled: !busy,
+            tooltip: 'Pilih tindakan untuk permintaan',
+            actions: const [
+              GawenPopupMenuAction(
+                value: false,
+                label: 'Tolak permintaan',
+                icon: Icons.close_rounded,
+                isDestructive: true,
+              ),
+              GawenPopupMenuAction(
+                value: true,
+                label: 'Terima sebagai karyawan',
+                icon: Icons.check_rounded,
+              ),
+            ],
+            onSelected: onDecision,
+            label: busy ? 'Memproses...' : 'Pilih tindakan',
+          ),
         ),
       ],
     );

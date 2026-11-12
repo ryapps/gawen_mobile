@@ -77,13 +77,11 @@ class _AcceptInvitationPageState extends State<AcceptInvitationPage> {
       context.go(AppRoutes.home);
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
+    GawenToast.error(
+      context,
+      message:
           restored.message ??
-              'Undangan diterima, tetapi status keanggotaan belum dapat diverifikasi. Coba periksa kembali.',
-        ),
-      ),
+          'Undangan diterima, tetapi status keanggotaan belum dapat diverifikasi. Coba periksa kembali.',
     );
   }
 
@@ -93,8 +91,22 @@ class _AcceptInvitationPageState extends State<AcceptInvitationPage> {
   ) => BlocConsumer<InvitationBloc, InvitationState>(
     listenWhen: (previous, current) =>
         previous.status != current.status &&
-        current.status == InvitationStatus.accepted,
-    listener: (context, state) => unawaited(_restoreAfterAcceptance()),
+        (current.status == InvitationStatus.accepted ||
+            current.status == InvitationStatus.failure),
+    listener: (context, state) {
+      if (state.status == InvitationStatus.accepted) {
+        GawenToast.success(
+          context,
+          message: state.message ?? 'Undangan berhasil diterima.',
+        );
+        unawaited(_restoreAfterAcceptance());
+      } else {
+        GawenToast.error(
+          context,
+          message: state.message ?? 'Undangan gagal diterima.',
+        );
+      }
+    },
     builder: (context, state) {
       final loading = state.status == InvitationStatus.loading;
       final authenticated = context.select(
@@ -107,11 +119,12 @@ class _AcceptInvitationPageState extends State<AcceptInvitationPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                PageHeader(
+                GawenAppBar(
+                  isLeadingEnabled: true,
                   title: 'Terima Undangan',
-                  onBack: () => context.go(
-                    authenticated ? AppRoutes.home : AppRoutes.welcome,
-                  ),
+                  onBack: () => authenticated
+                      ? context.go(AppRoutes.home)
+                      : context.go(AppRoutes.welcome),
                 ),
                 const SizedBox(height: 22),
                 const ScreenIntro(
@@ -124,9 +137,6 @@ class _AcceptInvitationPageState extends State<AcceptInvitationPage> {
                     message:
                         'Masuk dengan alamat email yang menerima undangan sebelum menerimanya.',
                   ),
-                if (state.status == InvitationStatus.failure &&
-                    state.message != null)
-                  GawenRequestError(message: state.message!),
                 if (state.status == InvitationStatus.accepted)
                   const GawenRequestError(
                     message:

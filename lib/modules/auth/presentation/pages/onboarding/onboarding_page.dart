@@ -46,8 +46,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
       if (mounted) context.go(AppRoutes.welcome);
     } on PlatformException {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Onboarding belum tersimpan. Coba lagi.')),
+      GawenToast.error(
+        context,
+        message: 'Onboarding belum tersimpan. Coba lagi.',
       );
     }
   }

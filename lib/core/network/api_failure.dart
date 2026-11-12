@@ -19,14 +19,18 @@ String dioErrorMessage(DioException error) {
   if (error.type == DioExceptionType.connectionTimeout ||
       error.type == DioExceptionType.sendTimeout ||
       error.type == DioExceptionType.receiveTimeout) {
-    return 'Koneksi terlalu lama. Periksa jaringanmu, lalu coba lagi.';
+    return 'Server membutuhkan waktu terlalu lama untuk merespons. Coba lagi.';
   }
   if (error.type == DioExceptionType.connectionError) {
-    return 'Tidak dapat terhubung ke server. Periksa koneksi dan alamat API.';
+    return 'Tidak dapat terhubung ke server. Periksa koneksi internet Anda.';
   }
   final body = error.response?.data;
+  final statusCode = error.response?.statusCode;
+  if (statusCode != null && statusCode >= 500) {
+    return 'Terjadi masalah pada server. Silakan coba lagi.';
+  }
   if (body is Map<String, dynamic> && body['message'] is String) {
-    final message = body['message'] as String;
+    final message = friendlyErrorMessage(body['message'] as String);
     final details = body['details'];
     if (details is List) {
       final issues = details
@@ -39,15 +43,38 @@ String dioErrorMessage(DioException error) {
           })
           .whereType<String>()
           .toList(growable: false);
-      if (issues.isNotEmpty) return '$message ${issues.join('; ')}';
+      if (issues.isNotEmpty && message != _unknownErrorMessage) {
+        return '$message ${issues.join('; ')}';
+      }
     }
-    return message;
+    if (message != _unknownErrorMessage) return message;
   }
-  final statusCode = error.response?.statusCode;
-  if (statusCode != null && statusCode >= 500) {
-    return 'Server sedang bermasalah. Coba lagi nanti.';
+  switch (statusCode) {
+    case 401:
+      return 'Sesi Anda telah berakhir. Silakan masuk kembali.';
+    case 403:
+      return 'Anda tidak memiliki akses untuk melakukan tindakan ini.';
+    case 404:
+      return 'Data yang diminta tidak ditemukan.';
   }
-  return 'Permintaan tidak dapat diproses. Periksa data dan coba lagi.';
+  return _unknownErrorMessage;
+}
+
+const _unknownErrorMessage = 'Terjadi kesalahan. Silakan coba lagi.';
+
+String _friendlyMessage(String message) {
+  final technicalMessage = RegExp(
+    r'\b(DioException|SocketException|FormatException|Status Code|stack trace|Internal Server Error|TypeError|Exception|PrismaClientKnownRequestError|SQLSTATE|Request failed|status code|Unauthorized|Forbidden|Not Found|Unknown Error|Network Error|ECONNRESET|ECONNREFUSED|ETIMEDOUT|ENOTFOUND|Database|SQL)\b|^\s*<(?:!doctype|html)',
+    caseSensitive: false,
+  );
+  return technicalMessage.hasMatch(message) ? _unknownErrorMessage : message;
+}
+
+String friendlyErrorMessage(String message) {
+  final normalized = message
+      .replaceFirst(RegExp(r'^(Bad state:|Exception:)\s*'), '')
+      .trim();
+  return _friendlyMessage(normalized);
 }
 
 Future<T> executeApiRequest<T>(Future<T> Function() request) async {
@@ -55,8 +82,8 @@ Future<T> executeApiRequest<T>(Future<T> Function() request) async {
     return await request();
   } on DioException catch (error) {
     throw ApiFailure(dioErrorMessage(error));
-  } on FormatException catch (error) {
-    throw ApiFailure(error.message);
+  } on FormatException {
+    throw const ApiFailure(_unknownErrorMessage);
   } on PlatformException {
     throw const ApiFailure('Penyimpanan sesi aman tidak tersedia.');
   }

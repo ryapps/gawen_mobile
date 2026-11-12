@@ -55,13 +55,11 @@ class _JoinRequestsPageState extends State<JoinRequestsPage> {
       context.go(AppRoutes.home);
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
+    GawenToast.error(
+      context,
+      message:
           restored.message ??
-              'Undangan diterima, tetapi status keanggotaan belum dapat diverifikasi. Coba periksa kembali.',
-        ),
-      ),
+          'Undangan diterima, tetapi status keanggotaan belum dapat diverifikasi. Coba periksa kembali.',
     );
   }
 
@@ -94,7 +92,9 @@ class _JoinRequestsPageState extends State<JoinRequestsPage> {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
             children: [
-              const PageHeader(),
+              GawenAppBar(
+                isLeadingEnabled: true,
+              ),
               const SizedBox(height: 20),
               const ScreenIntro(
                 title: 'Status Permintaan',

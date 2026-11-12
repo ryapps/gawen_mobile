@@ -29,11 +29,16 @@ class _OwnerJoinRequestsPageState extends State<OwnerJoinRequestsPage> {
   ) => BlocConsumer<InvitationBloc, InvitationState>(
     listenWhen: (previous, current) =>
         previous.ownerRequestsMessage != current.ownerRequestsMessage &&
-        current.ownerRequestsMessage != null,
+        current.ownerRequestsMessage != null &&
+        (current.ownerRequestsStatus != OwnerJoinRequestsStatus.failure ||
+            current.ownerRequests.isNotEmpty ||
+            previous.ownerRequestsStatus == OwnerJoinRequestsStatus.mutating),
     listener: (context, state) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(state.ownerRequestsMessage!)));
+      if (state.ownerRequestsStatus == OwnerJoinRequestsStatus.failure) {
+        GawenToast.error(context, message: state.ownerRequestsMessage!);
+      } else {
+        GawenToast.success(context, message: state.ownerRequestsMessage!);
+      }
       if (state.ownerRequestsMessage!.startsWith(
         'Permintaan karyawan disetujui',
       )) {
@@ -82,7 +87,8 @@ class _OwnerJoinRequestsPageState extends State<OwnerJoinRequestsPage> {
                 )
               else ...[
                 if (state.ownerRequestsStatus ==
-                    OwnerJoinRequestsStatus.failure)
+                        OwnerJoinRequestsStatus.failure &&
+                    state.ownerRequests.isEmpty)
                   GawenRequestError(
                     message:
                         state.ownerRequestsMessage ??
@@ -283,22 +289,27 @@ class _JoinRequestCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: GawenOutlinedButton(
+          SizedBox(
+            width: double.infinity,
+            child: GawenPopupMenuButton<bool>(
+              enabled: !busy,
+              tooltip: 'Pilih tindakan untuk permintaan',
+              actions: const [
+                GawenPopupMenuAction(
+                  value: false,
                   label: 'Tolak',
-                  onPressed: busy ? null : () => onDecision(false),
+                  icon: Icons.close_rounded,
+                  isDestructive: true,
                 ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: GawenPrimaryButton(
+                GawenPopupMenuAction(
+                  value: true,
                   label: 'Terima',
-                  onPressed: busy ? null : () => onDecision(true),
+                  icon: Icons.check_rounded,
                 ),
-              ),
-            ],
+              ],
+              onSelected: onDecision,
+              label: busy ? 'Memproses...' : 'Tinjau permintaan',
+            ),
           ),
         ],
       ),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend/core/widgets/app_bar.dart';
-import 'package:frontend/core/widgets/gawen_text.dart';
+import '../../../../core/widgets/gawen_toast.dart';
 import '../../../../core/widgets/gawen_button.dart';
 import '../../../../core/widgets/gawen_loading.dart';
 import '../../../../core/widgets/gawen_text_field.dart';
@@ -23,7 +23,6 @@ class _EditEmployeePageState extends State<EditEmployeePage> {
   final _positionController = TextEditingController();
   bool _initialized = false;
   bool _saving = false;
-  String? _error;
 
   @override
   void initState() {
@@ -73,15 +72,17 @@ class _EditEmployeePageState extends State<EditEmployeePage> {
           _initialized = true;
         }
         if (state.status == EmployeeStatus.failure && _saving) {
-          setState(() {
-            _saving = false;
-            _error = state.message ?? 'Informasi pekerjaan gagal disimpan.';
-          });
+          _saving = false;
+          GawenToast.error(
+            context,
+            message: state.message ?? 'Informasi pekerjaan gagal disimpan.',
+          );
         } else if (state.status == EmployeeStatus.ready &&
             state.message == 'Informasi pekerjaan diperbarui.') {
           _saving = false;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Informasi pekerjaan diperbarui.')),
+          GawenToast.success(
+            context,
+            message: 'Informasi pekerjaan diperbarui.',
           );
           Navigator.of(context).pop();
         }
@@ -94,7 +95,10 @@ class _EditEmployeePageState extends State<EditEmployeePage> {
             state.detailStatus == EmployeeDetailStatus.loading &&
             employee == null;
         return Scaffold(
-          appBar: GawenAppBar(title: 'Edit Informasi Pekerjaan', isLeadingEnabled: true),
+          appBar: GawenAppBar(
+            title: 'Edit Informasi Pekerjaan',
+            isLeadingEnabled: true,
+          ),
           body: loading
               ? const GawenLoading()
               : employee == null
@@ -124,9 +128,6 @@ class _EditEmployeePageState extends State<EditEmployeePage> {
                   child: ListView(
                     padding: const EdgeInsets.all(22),
                     children: [
-                      const GawenBodyText(
-                        'Ubah jabatan karyawan. Informasi profil pribadi dikelola oleh karyawan.',
-                      ),
                       GawenTextField(
                         controller: _positionController,
                         label: 'Jabatan',
@@ -136,7 +137,6 @@ class _EditEmployeePageState extends State<EditEmployeePage> {
                         textCapitalization: TextCapitalization.words,
                         validator: _validatePosition,
                       ),
-                      if (_error != null) GawenRequestError(message: _error!),
                       const SizedBox(height: 24),
                       GawenPrimaryButton(
                         label: 'Simpan perubahan',
@@ -153,10 +153,7 @@ class _EditEmployeePageState extends State<EditEmployeePage> {
 
   void _save() {
     if (!_formKey.currentState!.validate()) return;
-    setState(() {
-      _saving = true;
-      _error = null;
-    });
+    setState(() => _saving = true);
     context.read<EmployeeBloc>().add(
       ManagedEmployeePositionUpdateRequested(
         employeeId: widget.employeeId,

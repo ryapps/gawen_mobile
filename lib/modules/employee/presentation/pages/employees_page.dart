@@ -8,6 +8,7 @@ import 'package:frontend/core/theme/app_theme.dart';
 import 'package:frontend/core/widgets/app_bar.dart';
 import 'package:frontend/core/widgets/gawen_empty_state.dart';
 import 'package:frontend/core/widgets/gawen_loading.dart';
+import 'package:frontend/core/widgets/gawen_toast.dart';
 import 'package:frontend/core/widgets/gawen_button.dart';
 import 'package:frontend/core/widgets/main_navigation.dart';
 import 'package:frontend/core/widgets/request_error.dart';
@@ -127,9 +128,11 @@ class _EmployeesPageState extends State<EmployeesPage> {
       listenWhen: (previous, current) =>
           previous.message != current.message && current.message != null,
       listener: (context, state) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(state.message!)));
+        if (state.status == EmployeeStatus.failure) {
+          GawenToast.error(context, message: state.message!);
+        } else {
+          GawenToast.success(context, message: state.message!);
+        }
       },
       builder: (context, state) {
         final employees = state.managedEmployees;

@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:frontend/core/network/api_failure.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:frontend/modules/organization/presentation/validators/edit_organization_validator.dart';
@@ -724,7 +725,9 @@ class _EditOrganizationPageState extends State<EditOrganizationPage> {
         setState(() => _step++);
       }
     } catch (error) {
-      if (mounted) setState(() => _error = '$error');
+      if (mounted) {
+        GawenToast.error(context, message: friendlyErrorMessage('$error'));
+      }
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -835,9 +838,17 @@ class _EditOrganizationPageState extends State<EditOrganizationPage> {
           _loadedId!,
         );
       }
-      if (mounted) context.pop();
+      if (mounted) {
+        GawenToast.success(
+          context,
+          message: 'Informasi usaha berhasil diperbarui.',
+        );
+        context.pop();
+      }
     } catch (error) {
-      if (mounted) setState(() => _error = '$error');
+      if (mounted) {
+        GawenToast.error(context, message: friendlyErrorMessage('$error'));
+      }
     } finally {
       if (mounted) setState(() => _saving = false);
     }

@@ -87,13 +87,11 @@ class _JoinOrganizationPageState extends State<JoinOrganizationPage> {
       context.go(AppRoutes.home);
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
+    GawenToast.error(
+      context,
+      message:
           restored.message ??
-              'Undangan diterima, tetapi status keanggotaan belum dapat diverifikasi. Coba periksa kembali.',
-        ),
-      ),
+          'Undangan diterima, tetapi status keanggotaan belum dapat diverifikasi. Coba periksa kembali.',
     );
   }
 
@@ -103,18 +101,25 @@ class _JoinOrganizationPageState extends State<JoinOrganizationPage> {
   ) => BlocConsumer<InvitationBloc, InvitationState>(
     listenWhen: (previous, current) =>
         (previous.status != current.status &&
-            current.status == InvitationStatus.submitted) ||
+            (current.status == InvitationStatus.submitted ||
+                current.status == InvitationStatus.failure)) ||
         (previous.invitationInboxStatus != current.invitationInboxStatus &&
             current.invitationInboxStatus == InvitationInboxStatus.accepted),
     listener: (context, state) {
       if (state.status == InvitationStatus.submitted) {
         context.read<AuthBloc>().add(const SessionRestoreRequested());
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(state.message ?? 'Permintaan telah diperiksa.'),
-          ),
+        GawenToast.success(
+          context,
+          message:
+              state.message ??
+              'Permintaan bergabung berhasil dikirim ke pemilik usaha.',
         );
         context.go(AppRoutes.requests);
+      } else if (state.status == InvitationStatus.failure) {
+        GawenToast.error(
+          context,
+          message: state.message ?? 'Permintaan bergabung gagal dikirim.',
+        );
       } else {
         unawaited(_restoreAfterInvitationAcceptance());
       }
@@ -170,11 +175,6 @@ class _JoinOrganizationPageState extends State<JoinOrganizationPage> {
                     ],
                     const SizedBox(height: GawenSpacing.xl),
                     const _JoinWithCodeTitle(),
-                    if (state.status == InvitationStatus.failure &&
-                        state.message != null) ...[
-                      const SizedBox(height: GawenSpacing.md),
-                      GawenRequestError(message: state.message!),
-                    ],
                     Form(
                       key: _formKey,
                       child: GawenTextField(

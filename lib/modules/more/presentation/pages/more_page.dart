@@ -14,6 +14,31 @@ import '../../../../core/widgets/main_navigation.dart';
 class MorePage extends StatelessWidget {
   const MorePage({super.key});
 
+  Future<void> _confirmLogout(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Keluar dari akun?'),
+        content: const Text(
+          'Kamu perlu masuk kembali untuk menggunakan akun ini.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Batal'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: GawenColors.error),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Keluar'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    context.read<AuthBloc>().add(const LogoutRequested());
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthBloc>().state;
@@ -38,7 +63,7 @@ class MorePage extends StatelessWidget {
                 stops: [0.5, 1.0],
                 colors: [
                   GawenColors.primary,
-                  GawenColors.primary.withOpacity(0.5),
+                  GawenColors.primary.withValues(alpha: 0.5),
                 ],
               ),
               borderRadius: BorderRadius.circular(20),
@@ -154,7 +179,7 @@ class MorePage extends StatelessWidget {
               color: GawenColors.error,
             ),
             subtitle: 'Log out dari aplikasi',
-            onTap: () => context.read<AuthBloc>().add(const LogoutRequested()),
+            onTap: () => _confirmLogout(context),
           ),
         ],
       ),

@@ -1,3 +1,5 @@
+import '../../domain/entities/auth_account_type.dart';
+
 sealed class AuthEvent {
   const AuthEvent();
 }
@@ -7,10 +9,15 @@ final class SessionRestoreRequested extends AuthEvent {
 }
 
 final class LoginSubmitted extends AuthEvent {
-  const LoginSubmitted({required this.email, required this.password});
+  const LoginSubmitted({
+    required this.email,
+    required this.password,
+    required this.accountType,
+  });
 
   final String email;
   final String password;
+  final AuthAccountType accountType;
 }
 
 final class OwnerRegistrationSubmitted extends AuthEvent {

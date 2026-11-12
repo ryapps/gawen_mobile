@@ -68,10 +68,19 @@ class _RegistrationPageState extends State<RegistrationPage> {
   Widget build(BuildContext context) => BlocConsumer<AuthBloc, AuthState>(
     listenWhen: (previous, current) =>
         previous.status != current.status &&
-        current.status == AuthStatus.registered,
+        (current.status == AuthStatus.registered ||
+            current.status == AuthStatus.failure),
     listener: (context, state) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(state.message ?? 'Registrasi diproses.')),
+      if (state.status == AuthStatus.failure) {
+        GawenToast.error(
+          context,
+          message: state.message ?? 'Registrasi gagal. Silakan coba lagi.',
+        );
+        return;
+      }
+      GawenToast.success(
+        context,
+        message: state.message ?? 'Registrasi berhasil diproses.',
       );
       context.go(
         AppRoutes.login,
@@ -92,7 +101,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                PageHeader(
+                GawenAppBar(
+                  isLeadingEnabled: true,
                   onBack: () => widget.invitationToken == null
                       ? context.go(AppRoutes.welcome)
                       : context.go(
@@ -109,8 +119,6 @@ class _RegistrationPageState extends State<RegistrationPage> {
                       ? 'Mulai kelola tim kerjamu dengan lebih praktis.'
                       : 'Buat akun untuk terhubung dengan tempat kerjamu.',
                 ),
-                if (state.status == AuthStatus.failure && state.message != null)
-                  GawenRequestError(message: state.message!),
                 Form(
                   key: _formKey,
                   child: Column(

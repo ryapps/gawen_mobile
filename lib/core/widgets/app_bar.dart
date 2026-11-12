@@ -7,16 +7,18 @@ import 'gawen_text.dart';
 class GawenAppBar extends StatelessWidget implements PreferredSizeWidget {
   const GawenAppBar({
     super.key,
-    required this.title,
+    this.title,
     this.subtitle,
     this.action,
+    this.leadingWidth,
     this.isLeadingEnabled = false,
     this.onBack,
   });
 
-  final String title;
+  final String? title;
   final String? subtitle;
   final Widget? action;
+  final double? leadingWidth;
   final bool isLeadingEnabled;
   final VoidCallback? onBack;
 
@@ -25,23 +27,21 @@ class GawenAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) => AppBar(
-    title: Padding(
-      padding: const EdgeInsets.only(left: 4),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          GawenSectionTitle(title, style: const TextStyle(fontSize: 18)),
-          if (subtitle != null) ...[
-            const SizedBox(height: GawenSpacing.xs),
-            GawenCaption(subtitle!),
-          ],
+    title: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (title != null)
+          GawenSectionTitle(title!, style: const TextStyle(fontSize: 18)),
+        if (subtitle != null) ...[
+          const SizedBox(height: GawenSpacing.xs),
+          GawenCaption(subtitle!),
         ],
-      ),
+      ],
     ),
     leading: isLeadingEnabled
         ? SizedBox(
-            width: 70,
+            width: leadingWidth ?? 30,
             child: Center(
               child: IconButton(
                 tooltip: 'Kembali',
@@ -61,7 +61,7 @@ class GawenAppBar extends StatelessWidget implements PreferredSizeWidget {
             ),
           )
         : null,
-    leadingWidth: isLeadingEnabled ? 70 : null,
+    leadingWidth: isLeadingEnabled ? leadingWidth : 0,
     centerTitle: false,
     actions: [action ?? const SizedBox(width: 4), const SizedBox(width: 20)],
   );

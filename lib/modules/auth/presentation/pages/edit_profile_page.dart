@@ -3,10 +3,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend/core/widgets/app_bar.dart';
+import 'package:frontend/core/widgets/gawen_toast.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/network/api_failure.dart';
 import '../../../../core/widgets/gawen_avatar.dart';
 import '../../../../core/widgets/gawen_button.dart';
 import '../../../../core/widgets/gawen_text_field.dart';
@@ -174,12 +176,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
       }
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profil berhasil diperbarui.')),
-      );
+      GawenToast.success(context, message: 'Profil berhasil diperbarui.');
       Navigator.of(context).pop();
     } on StateError catch (error) {
-      if (mounted) setState(() => _error = error.message);
+      if (mounted) {
+        GawenToast.error(context, message: friendlyErrorMessage(error.message));
+      }
     } finally {
       if (mounted) setState(() => _saving = false);
     }

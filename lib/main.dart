@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'core/config/app_config.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/widgets/gawen_toast.dart';
 import 'modules/auth/data/auth_repository.dart';
 import 'modules/auth/presentation/bloc/auth_bloc.dart';
 import 'modules/employee/data/employee_repository.dart';
@@ -73,6 +74,9 @@ class _GawenAppState extends State<GawenApp> {
         context.read<InvitationBloc>().add(
           const InvitationStateResetRequested(),
         );
+        if (state.message != null) {
+          GawenToast.error(context, message: state.message!);
+        }
       },
       child: MaterialApp.router(
         title: 'Gawen',

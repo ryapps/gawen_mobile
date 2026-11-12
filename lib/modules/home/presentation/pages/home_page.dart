@@ -19,11 +19,6 @@ class HomePage extends StatelessWidget {
           current.status == AuthStatus.unauthenticated,
       listener: (context, state) {
         context.go(AppRoutes.welcome);
-        if (state.message != null) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(state.message!)));
-        }
       },
       child: auth.isOwner ? const OwnerHomePage() : const EmployeeHomePage(),
     );

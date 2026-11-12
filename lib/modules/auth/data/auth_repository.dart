@@ -5,6 +5,7 @@ import '../../employee/data/models/membership_model.dart';
 import '../../invitation/domain/entities/join_request_entity.dart';
 import '../../employee/domain/entities/membership_entity.dart';
 import '../domain/entities/membership_access.dart';
+import '../domain/entities/auth_account_type.dart';
 import '../../../core/network/api_failure.dart';
 import '../../../core/network/api_client.dart';
 import 'models/user_model.dart';
@@ -29,20 +30,27 @@ class AuthRepository {
 
   final Dio _client;
 
-  Future<void> login({required String email, required String password}) =>
-      executeApiRequest(() async {
-        final response = await _client.post<Map<String, dynamic>>(
-          '/api/auth/login',
-          data: {'email': email.trim(), 'password': password},
-        );
-        final data = response.data?['data'];
-        if (data is! Map<String, dynamic> ||
-            data['accessToken'] is! String ||
-            data['tokenType'] != 'Bearer') {
-          throw const ApiFailure('Respons login tidak valid dari server.');
-        }
-        await ApiClient.saveToken(data['accessToken'] as String);
-      });
+  Future<void> login({
+    required String email,
+    required String password,
+    required AuthAccountType accountType,
+  }) => executeApiRequest(() async {
+    final response = await _client.post<Map<String, dynamic>>(
+      '/api/auth/login',
+      data: {
+        'email': email.trim(),
+        'password': password,
+        'accountType': accountType.apiValue,
+      },
+    );
+    final data = response.data?['data'];
+    if (data is! Map<String, dynamic> ||
+        data['accessToken'] is! String ||
+        data['tokenType'] != 'Bearer') {
+      throw const ApiFailure('Respons login tidak valid dari server.');
+    }
+    await ApiClient.saveToken(data['accessToken'] as String);
+  });
 
   Future<UserEntity> updateProfile({
     required String name,

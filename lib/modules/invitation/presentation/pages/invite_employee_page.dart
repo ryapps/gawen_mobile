@@ -50,9 +50,23 @@ class _InviteEmployeePageState extends State<InviteEmployeePage> {
           listenWhen: (previous, current) =>
               previous.businessJoinCodeMessage !=
                   current.businessJoinCodeMessage &&
+              current.businessJoinCodeStatus !=
+                  BusinessJoinCodeStatus.failure &&
               current.businessJoinCodeMessage != null,
-          listener: (context, state) =>
-              _showMessage(state.businessJoinCodeMessage!),
+          listener: (context, state) {
+            if (state.businessJoinCodeStatus ==
+                BusinessJoinCodeStatus.failure) {
+              GawenToast.error(
+                context,
+                message: state.businessJoinCodeMessage!,
+              );
+            } else {
+              GawenToast.success(
+                context,
+                message: state.businessJoinCodeMessage!,
+              );
+            }
+          },
         ),
         BlocListener<InvitationBloc, InvitationState>(
           listenWhen: (previous, current) =>
@@ -61,6 +75,15 @@ class _InviteEmployeePageState extends State<InviteEmployeePage> {
               current.createdInvitation != null,
           listener: (context, state) =>
               _showEmailInvitation(state.createdInvitation!),
+        ),
+        BlocListener<InvitationBloc, InvitationState>(
+          listenWhen: (previous, current) =>
+              previous.emailInvitationMessage !=
+                  current.emailInvitationMessage &&
+              current.emailInvitationStatus == EmailInvitationStatus.failure &&
+              current.emailInvitationMessage != null,
+          listener: (context, state) =>
+              GawenToast.error(context, message: state.emailInvitationMessage!),
         ),
       ],
       child: Scaffold(
@@ -115,9 +138,7 @@ class _InviteEmployeePageState extends State<InviteEmployeePage> {
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    GawenToast.success(context, message: message);
   }
 
   void _loadBusinessCode() {
@@ -173,7 +194,10 @@ class _InviteEmployeePageState extends State<InviteEmployeePage> {
       if (mounted) _showMessage('Kode bergabung disalin.');
     } on PlatformException {
       if (mounted) {
-        _showMessage('Kode tidak dapat disalin. Silakan salin manual.');
+        GawenToast.error(
+          context,
+          message: 'Kode tidak dapat disalin. Silakan salin manual.',
+        );
       }
     }
   }
@@ -189,7 +213,12 @@ class _InviteEmployeePageState extends State<InviteEmployeePage> {
         ),
       );
     } on PlatformException {
-      if (mounted) _showMessage('Kode tidak dapat dibagikan saat ini.');
+      if (mounted) {
+        GawenToast.error(
+          context,
+          message: 'Kode tidak dapat dibagikan saat ini.',
+        );
+      }
     }
   }
 
@@ -302,10 +331,6 @@ class _EmailInvitationSection extends StatelessWidget {
       ),
       childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       children: [
-        if (state.emailInvitationStatus == EmailInvitationStatus.failure)
-          GawenRequestError(
-            message: state.emailInvitationMessage ?? 'Undangan gagal dibuat.',
-          ),
         Form(
           key: formKey,
           child: GawenTextField(

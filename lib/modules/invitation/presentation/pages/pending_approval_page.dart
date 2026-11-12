@@ -21,9 +21,7 @@ class PendingApprovalPage extends StatelessWidget {
       if (state.membershipAccess == MembershipAccess.active) {
         context.go(AppRoutes.home);
       } else if (state.message != null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(state.message!)));
+        GawenToast.error(context, message: state.message!);
       }
     },
     builder: (context, state) {
@@ -36,7 +34,10 @@ class PendingApprovalPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                PageHeader(onBack: () => context.go(AppRoutes.join)),
+                GawenAppBar(
+                  isLeadingEnabled: true,
+                  onBack: () => context.go(AppRoutes.join),
+                ),
                 const Spacer(),
                 const Icon(
                   Icons.schedule_rounded,

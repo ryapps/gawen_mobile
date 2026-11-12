@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/core/network/api_failure.dart';
 import 'package:frontend/modules/auth/data/auth_repository.dart';
+import 'package:frontend/modules/auth/domain/entities/auth_account_type.dart';
 import 'package:frontend/modules/auth/domain/entities/user_entity.dart';
 import 'package:frontend/modules/auth/presentation/bloc/auth_bloc.dart';
 import 'package:frontend/modules/employee/data/employee_repository.dart';
@@ -15,6 +16,25 @@ import 'package:frontend/modules/organization/domain/entities/organization_entit
 import 'package:frontend/modules/organization/presentation/bloc/organization_bloc.dart';
 
 void main() {
+  test('login passes the selected account type to the repository', () async {
+    final repository = _FakeLoginAuthRepository();
+    final bloc = AuthBloc(repository);
+
+    bloc.add(
+      const LoginSubmitted(
+        email: 'ayu@example.com',
+        password: 'password',
+        accountType: AuthAccountType.employee,
+      ),
+    );
+    await bloc.stream.firstWhere(
+      (state) => state.status == AuthStatus.authenticated,
+    );
+
+    expect(repository.accountType, AuthAccountType.employee);
+    await bloc.close();
+  });
+
   test('owner join request decisions refresh the request list', () async {
     final repository = _FakeInvitationRepository();
     final bloc = InvitationBloc(repository);
@@ -167,6 +187,28 @@ void main() {
     expect(emitted.last.message, 'Informasi tidak tersedia.');
     await bloc.close();
   });
+}
+
+class _FakeLoginAuthRepository extends AuthRepository {
+  _FakeLoginAuthRepository() : super(client: Dio());
+
+  AuthAccountType? accountType;
+
+  @override
+  Future<void> login({
+    required String email,
+    required String password,
+    required AuthAccountType accountType,
+  }) async {
+    this.accountType = accountType;
+  }
+
+  @override
+  Future<RestoredSession?> restoreSession() async => RestoredSession(
+    user: const UserEntity(id: 'user-1', name: 'Ayu', email: 'ayu@example.com'),
+    memberships: const [],
+    access: MembershipAccess.none,
+  );
 }
 
 class _FakeProfileAuthRepository extends AuthRepository {

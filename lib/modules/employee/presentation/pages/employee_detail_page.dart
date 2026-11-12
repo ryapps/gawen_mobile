@@ -8,6 +8,7 @@ import '../../../../core/router/route_names.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/gawen_avatar.dart';
 import '../../../../core/widgets/gawen_loading.dart';
+import '../../../../core/widgets/gawen_toast.dart';
 import '../../../../core/widgets/request_error.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../domain/entities/employee_entity.dart';
@@ -41,9 +42,11 @@ class _EmployeeDetailPageState extends State<EmployeeDetailPage> {
       listenWhen: (previous, current) =>
           previous.message != current.message && current.message != null,
       listener: (context, state) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(state.message!)));
+        if (state.status == EmployeeStatus.failure) {
+          GawenToast.error(context, message: state.message!);
+        } else {
+          GawenToast.success(context, message: state.message!);
+        }
       },
       builder: (context, state) {
         final employee = state.selectedEmployee?.id == widget.employeeId
@@ -144,10 +147,6 @@ class _EmployeeDetailPageState extends State<EmployeeDetailPage> {
                                   : 'Aktifkan Kembali',
                             ),
                     ),
-
-                    if (state.status == EmployeeStatus.failure &&
-                        state.message != null)
-                      GawenRequestError(message: state.message!),
                   ],
                 ),
         );

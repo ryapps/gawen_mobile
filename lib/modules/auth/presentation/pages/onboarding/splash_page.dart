@@ -36,10 +36,9 @@ class _SplashPageState extends State<SplashPage> {
     } on PlatformException {
       if (!mounted) return;
       context.go(AppRoutes.welcome);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Preferensi onboarding tidak dapat dibaca.'),
-        ),
+      GawenToast.error(
+        context,
+        message: 'Preferensi onboarding tidak dapat dibaca.',
       );
     }
   }

@@ -52,6 +52,9 @@ class _LoginPageState extends State<LoginPage> {
       LoginSubmitted(
         email: _emailController.text,
         password: _passwordController.text,
+        accountType: widget.invitationToken == null
+            ? _mode
+            : LoginMode.employee,
       ),
     );
   }
@@ -60,8 +63,16 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) => BlocConsumer<AuthBloc, AuthState>(
     listenWhen: (previous, current) =>
         previous.status != current.status &&
-        current.status == AuthStatus.authenticated,
+        (current.status == AuthStatus.authenticated ||
+            current.status == AuthStatus.failure),
     listener: (context, state) {
+      if (state.status == AuthStatus.failure) {
+        GawenToast.error(
+          context,
+          message: state.message ?? 'Tidak dapat masuk. Silakan coba lagi.',
+        );
+        return;
+      }
       if (widget.invitationToken != null) {
         context.go(AppRoutes.invitation, extra: widget.invitationToken);
       } else {
@@ -83,7 +94,8 @@ class _LoginPageState extends State<LoginPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                PageHeader(
+                GawenAppBar(
+                  isLeadingEnabled: true,
                   onBack: () => widget.invitationToken == null
                       ? context.go(AppRoutes.welcome)
                       : context.go(
@@ -188,8 +200,6 @@ class _LoginPageState extends State<LoginPage> {
                       ? 'Jika akun belum terhubung ke perusahaan, kamu akan diarahkan untuk memasukkan kode bisnis.'
                       : 'Akses usaha menggunakan akun pemilik yang terdaftar.',
                 ),
-                if (state.status == AuthStatus.failure && state.message != null)
-                  GawenRequestError(message: state.message!),
                 Form(
                   key: _formKey,
                   child: Column(

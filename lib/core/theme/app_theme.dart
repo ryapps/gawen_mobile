@@ -4,12 +4,15 @@ abstract final class GawenColors {
   static const primary = Color(0xFF21865B);
   static const primaryDark = Color(0xFF176644);
   static const primarySoft = Color(0xFFE5F5EC);
+  static const successSoft = Color(0xFFEAF8EE);
   static const background = Color(0xFFF7F9F7);
   static const text = Color(0xFF202923);
   static const muted = Color(0xFF68756C);
   static const border = Color(0xFFE3E9E4);
   static const warning = Color(0xFFE8A23A);
   static const warningSoft = Color(0xFFFFF3E4);
+  static const toastInfo = Color(0xFF3478D4);
+  static const toastInfoSoft = Color(0xFFEBDDFA);
   static const error = Color(0xFFD94F4F);
   static const errorSoft = Color(0xFFFFF0F0);
   static const info = Color(0xFF3478D4);

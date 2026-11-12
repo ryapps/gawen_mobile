@@ -73,7 +73,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     if (state.status == AuthStatus.loading) return;
     emit(state.copyWith(status: AuthStatus.loading, clearMessage: true));
     try {
-      await _repository.login(email: event.email, password: event.password);
+      await _repository.login(
+        email: event.email,
+        password: event.password,
+        accountType: event.accountType,
+      );
       final session = await _repository.restoreSession();
       if (session == null) {
         throw const ApiFailure(
