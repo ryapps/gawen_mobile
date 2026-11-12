@@ -129,80 +129,78 @@ class _JoinOrganizationPageState extends State<JoinOrganizationPage> {
       final acceptingInvitation =
           state.invitationInboxStatus == InvitationInboxStatus.mutating;
       final hasInvitations = state.ownInvitations.isNotEmpty;
-      return Scaffold(
-        body: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(
-              GawenSpacing.lg,
-              GawenSpacing.lg,
-              GawenSpacing.lg,
-              GawenSpacing.xxl,
-            ),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 520),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const _JoinOrganizationHero(),
-                    if (hasInvitations) ...[
-                      const SizedBox(height: GawenSpacing.xl),
-                      _OwnInvitationsSection(
-                        invitations: state.ownInvitations,
-                        acceptingInvitationId: state.acceptingInvitationId,
-                        inboxStatus: state.invitationInboxStatus,
-                        inboxMessage: state.invitationInboxMessage,
-                        onRetry: () => context.read<InvitationBloc>().add(
-                          const OwnInvitationsRefreshRequested(),
-                        ),
-                        onAccept: (invitationId) => context
-                            .read<InvitationBloc>()
-                            .add(EmployeeInvitationAccepted(invitationId)),
-                      ),
-                      const SizedBox(height: GawenSpacing.xl),
-                      const _AlternativeDivider(),
-                    ] else if (state.invitationInboxStatus ==
-                        InvitationInboxStatus.failure) ...[
-                      const SizedBox(height: GawenSpacing.xl),
-                      GawenRequestError(
-                        message:
-                            state.invitationInboxMessage ??
-                            'Undangan gagal dimuat.',
-                        onRetry: () => context.read<InvitationBloc>().add(
-                          const OwnInvitationsRefreshRequested(),
-                        ),
-                      ),
-                    ],
+      return GawenPage(
+        padding: EdgeInsets.zero,
+        scrollable: false,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(
+            horizontal: GawenSpacing.pageHorizontal,
+            vertical: GawenSpacing.pageVertical,
+          ),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const _JoinOrganizationHero(),
+                  if (hasInvitations) ...[
                     const SizedBox(height: GawenSpacing.xl),
-                    const _JoinWithCodeTitle(),
-                    Form(
-                      key: _formKey,
-                      child: GawenTextField(
-                        controller: _codeController,
-                        label: 'Kode Bergabung',
-                        hint: 'Masukkan 8 karakter kode',
-                        icon: Icons.key_outlined,
-                        textCapitalization: TextCapitalization.characters,
-                        textInputAction: TextInputAction.done,
-                        maxLength: 8,
-                        enabled: !loading && !acceptingInvitation,
-                        validator: (value) {
-                          if (!_isValidBusinessCode(value ?? '')) {
-                            return 'Masukkan kode yang terdiri dari 8 huruf atau angka.';
-                          }
-                          return null;
-                        },
+                    _OwnInvitationsSection(
+                      invitations: state.ownInvitations,
+                      acceptingInvitationId: state.acceptingInvitationId,
+                      inboxStatus: state.invitationInboxStatus,
+                      inboxMessage: state.invitationInboxMessage,
+                      onRetry: () => context.read<InvitationBloc>().add(
+                        const OwnInvitationsRefreshRequested(),
                       ),
+                      onAccept: (invitationId) => context
+                          .read<InvitationBloc>()
+                          .add(EmployeeInvitationAccepted(invitationId)),
                     ),
-                    const SizedBox(height: GawenSpacing.lg),
-                    GawenPrimaryButton(
-                      label: 'Ajukan Bergabung',
-                      onPressed: _submit,
-                      isLoading: loading,
-                      enabled: !acceptingInvitation,
+                    const SizedBox(height: GawenSpacing.xl),
+                    const _AlternativeDivider(),
+                  ] else if (state.invitationInboxStatus ==
+                      InvitationInboxStatus.failure) ...[
+                    const SizedBox(height: GawenSpacing.xl),
+                    GawenRequestError(
+                      message:
+                          state.invitationInboxMessage ??
+                          'Undangan gagal dimuat.',
+                      onRetry: () => context.read<InvitationBloc>().add(
+                        const OwnInvitationsRefreshRequested(),
+                      ),
                     ),
                   ],
-                ),
+                  const SizedBox(height: GawenSpacing.xl),
+                  const _JoinWithCodeTitle(),
+                  Form(
+                    key: _formKey,
+                    child: GawenTextField(
+                      controller: _codeController,
+                      label: 'Kode Bergabung',
+                      hint: 'Masukkan 8 karakter kode',
+                      icon: Icons.key_outlined,
+                      textCapitalization: TextCapitalization.characters,
+                      textInputAction: TextInputAction.done,
+                      maxLength: 8,
+                      enabled: !loading && !acceptingInvitation,
+                      validator: (value) {
+                        if (!_isValidBusinessCode(value ?? '')) {
+                          return 'Masukkan kode yang terdiri dari 8 huruf atau angka.';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: GawenSpacing.lg),
+                  GawenPrimaryButton(
+                    label: 'Ajukan Bergabung',
+                    onPressed: _submit,
+                    isLoading: loading,
+                    enabled: !acceptingInvitation,
+                  ),
+                ],
               ),
             ),
           ),

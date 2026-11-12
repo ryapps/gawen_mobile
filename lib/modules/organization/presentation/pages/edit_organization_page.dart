@@ -2,21 +2,21 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend/core/network/api_failure.dart';
-import 'package:image_cropper/image_cropper.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:frontend/modules/organization/presentation/validators/edit_organization_validator.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_cropper/image_cropper.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/router/route_names.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/gawen_widgets.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
-import '../../domain/entities/organization_entity.dart';
-import '../../domain/entities/organization_business_type.dart';
-import '../bloc/organization_bloc.dart';
-import '../widgets/organization_setup_steps.dart';
 import '../../../regions/domain/entities/administrative_region.dart';
 import '../../../regions/presentation/bloc/region_bloc.dart';
+import '../../domain/entities/organization_business_type.dart';
+import '../../domain/entities/organization_entity.dart';
+import '../bloc/organization_bloc.dart';
+import '../widgets/organization_setup_steps.dart';
 
 class EditOrganizationPage extends StatefulWidget {
   const EditOrganizationPage({super.key, this.isSetup = false});
@@ -185,88 +185,96 @@ class _EditOrganizationPageState extends State<EditOrganizationPage> {
   @override
   Widget build(BuildContext context) {
     if (widget.isSetup && !context.watch<AuthBloc>().state.isOwner) {
-      return const Scaffold(body: Center(child: Text('Khusus pemilik usaha.')));
+      return const GawenPage(
+        padding: EdgeInsets.zero,
+        child: Center(child: Text('Khusus pemilik usaha.')),
+      );
     }
-    return Scaffold(
+    return GawenPage(
       appBar: widget.isSetup
           ? null
-          : GawenAppBar(title: 'Pengaturan Perusahaan', isLeadingEnabled: true),
-      body: SafeArea(
-        child: _loading
-            ? const GawenLoading()
-            : widget.isSetup
-            ? Column(
-                children: [
-                  OrganizationSetupHeader(
-                    onBack: () {
-                      if (_step > 0) {
-                        setState(() => _step--);
-                      } else {
-                        context.go(AppRoutes.home);
-                      }
-                    },
+          : GawenAppBar(
+              title: 'Pengaturan Perusahaan',
+              isLeadingEnabled: true,
+              leadingWidth: 60.0,
+            ),
+      padding: EdgeInsets.zero,
+      scrollable: false,
+      child: _loading
+          ? const GawenLoading()
+          : widget.isSetup
+          ? Column(
+              children: [
+                OrganizationSetupHeader(
+                  onBack: () {
+                    if (_step > 0) {
+                      setState(() => _step--);
+                    } else {
+                      context.go(AppRoutes.home);
+                    }
+                  },
+                ),
+                OrganizationSetupProgress(
+                  currentStep: _step,
+                  totalSteps: _titles.length,
+                ),
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(21, 20, 21, 18),
+                    children: [
+                      OrganizationSetupSectionHeading(
+                        title: _titles[_step],
+                        description: _descriptions[_step],
+                        icon: _stepIcons[_step],
+                      ),
+                      if (_error != null) GawenRequestError(message: _error!),
+                      Form(key: _formKey, child: _activeStep()),
+                    ],
                   ),
-                  OrganizationSetupProgress(
+                ),
+                Container(
+                  padding: const EdgeInsets.fromLTRB(20, 11, 20, 13),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    border: Border(top: BorderSide(color: GawenColors.border)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Color(0x0A1F412C),
+                        blurRadius: 20,
+                        offset: Offset(0, -7),
+                      ),
+                    ],
+                  ),
+                  child: OrganizationSetupNavigation(
                     currentStep: _step,
                     totalSteps: _titles.length,
+                    isSaving: _saving,
+                    onBack: () => setState(() => _step--),
+                    onNext: _next,
                   ),
-                  Expanded(
-                    child: ListView(
-                      padding: const EdgeInsets.fromLTRB(21, 20, 21, 18),
-                      children: [
-                        OrganizationSetupSectionHeading(
-                          title: _titles[_step],
-                          description: _descriptions[_step],
-                          icon: _stepIcons[_step],
-                        ),
-                        if (_error != null) GawenRequestError(message: _error!),
-                        Form(key: _formKey, child: _activeStep()),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.fromLTRB(20, 11, 20, 13),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      border: Border(
-                        top: BorderSide(color: GawenColors.border),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Color(0x0A1F412C),
-                          blurRadius: 20,
-                          offset: Offset(0, -7),
-                        ),
-                      ],
-                    ),
-                    child: OrganizationSetupNavigation(
-                      currentStep: _step,
-                      totalSteps: _titles.length,
-                      isSaving: _saving,
-                      onBack: () => setState(() => _step--),
-                      onNext: _next,
-                    ),
-                  ),
-                ],
-              )
-            : ListView(
-                padding: const EdgeInsets.fromLTRB(22, 16, 22, 28),
-                children: [
-                  ScreenIntro(
-                    title: 'Perbarui informasi perusahaan',
-                    description: 'Perubahan disimpan ke profil perusahaan.',
-                  ),
-                  if (_error != null) GawenRequestError(message: _error!),
-                  Form(key: _formKey, child: _activeStep()),
-                  const SizedBox(height: 24),
-                  GawenPrimaryButton(
-                    label: 'Simpan Perubahan',
-                    onPressed: _saveOrganization,
-                    isLoading: _saving,
-                  ),
-                ],
+                ),
+              ],
+            )
+          : ListView(
+              padding: const EdgeInsets.symmetric(
+                horizontal: GawenSpacing.pageHorizontal,
+                vertical: GawenSpacing.pageVertical,
               ),
-      ),
+              children: [
+                ScreenIntro(
+                  title: 'Perbarui informasi perusahaan',
+                  description: 'Perubahan disimpan ke profil perusahaan.',
+                ),
+                if (_error != null) GawenRequestError(message: _error!),
+                Form(key: _formKey, child: _activeStep()),
+                const SizedBox(height: 24),
+                GawenPrimaryButton(
+                  label: 'Simpan Perubahan',
+                  onPressed: _saveOrganization,
+                  isLoading: _saving,
+                ),
+              ],
+            ),
     );
   }
 

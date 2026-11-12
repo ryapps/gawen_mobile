@@ -7,6 +7,7 @@ import 'package:frontend/core/widgets/gawen_avatar.dart';
 import 'package:frontend/core/widgets/gawen_card.dart';
 import 'package:frontend/core/widgets/gawen_empty_state.dart';
 import 'package:frontend/core/widgets/gawen_loading.dart';
+import 'package:frontend/core/widgets/gawen_page.dart';
 import 'package:frontend/core/widgets/gawen_popup_menu_button.dart';
 import 'package:frontend/core/widgets/gawen_status_badge.dart';
 import 'package:frontend/core/widgets/gawen_text.dart';
@@ -38,29 +39,28 @@ class _OwnerJoinRequestDetailPageState
         builder: (context, state) {
           final request =
               _findRequest(state.ownerRequests) ?? _validInitialRequest();
-          return Scaffold(
+          return GawenPage(
             appBar: GawenAppBar(
               title: 'Detail Permintaan',
               isLeadingEnabled: true,
+              leadingWidth: 60.0,
             ),
-            body: SafeArea(
-              child: request == null
-                  ? state.ownerRequestsStatus == OwnerJoinRequestsStatus.loading
-                        ? const GawenLoading()
-                        : GawenEmptyState(
-                            title: 'Detail permintaan tidak tersedia',
-                            icon: Icons.person_search_outlined,
-                            actionLabel: 'Muat ulang',
-                            onAction: _reloadRequests,
-                          )
-                  : _RequestDetails(
-                      request: request,
-                      busy:
-                          state.ownerRequestsStatus ==
-                          OwnerJoinRequestsStatus.mutating,
-                      onDecision: _decide,
-                    ),
-            ),
+            child: request == null
+                ? state.ownerRequestsStatus == OwnerJoinRequestsStatus.loading
+                      ? const GawenLoading()
+                      : GawenEmptyState(
+                          title: 'Detail permintaan tidak tersedia',
+                          icon: Icons.person_search_outlined,
+                          actionLabel: 'Muat ulang',
+                          onAction: _reloadRequests,
+                        )
+                : _RequestDetails(
+                    request: request,
+                    busy:
+                        state.ownerRequestsStatus ==
+                        OwnerJoinRequestsStatus.mutating,
+                    onDecision: _decide,
+                  ),
           );
         },
       );
@@ -155,7 +155,10 @@ class _RequestDetails extends StatelessWidget {
   Widget build(BuildContext context) {
     final user = request.user;
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+      padding: const EdgeInsets.symmetric(
+        horizontal: GawenSpacing.pageHorizontal,
+        vertical: GawenSpacing.pageVertical,
+      ),
       children: [
         GawenCard(
           child: Column(

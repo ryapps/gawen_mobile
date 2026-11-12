@@ -23,43 +23,48 @@ class GawenAppBar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback? onBack;
 
   @override
-  Size get preferredSize => const Size.fromHeight(60);
+  Size get preferredSize => const Size.fromHeight(70);
 
   @override
   Widget build(BuildContext context) => AppBar(
-    title: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (title != null)
-          GawenSectionTitle(title!, style: const TextStyle(fontSize: 18)),
-        if (subtitle != null) ...[
-          const SizedBox(height: GawenSpacing.xs),
-          GawenCaption(subtitle!),
+    title: Padding(
+      padding: const EdgeInsets.only(left: 4.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (title != null)
+            GawenSectionTitle(title!, style: const TextStyle(fontSize: 18)),
+          if (subtitle != null) ...[
+            const SizedBox(height: GawenSpacing.xs),
+            GawenCaption(subtitle!),
+          ],
         ],
-      ],
+      ),
     ),
     leading: isLeadingEnabled
-        ? SizedBox(
-            width: leadingWidth ?? 30,
-            child: Center(
-              child: IconButton(
-                tooltip: 'Kembali',
-                style: IconButton.styleFrom(
-                  overlayColor: GawenColors.primarySoft,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(GawenRadius.xl),
-                    side: const BorderSide(color: GawenColors.border),
+        ? Padding(
+          padding: const EdgeInsets.only(left: 20.0),
+          child: SizedBox(
+              child: Center(
+                child: IconButton(
+                  tooltip: 'Kembali',
+                  style: IconButton.styleFrom(
+                    overlayColor: GawenColors.primarySoft,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(GawenRadius.xl),
+                      side: const BorderSide(color: GawenColors.border),
+                    ),
                   ),
+                  icon: const Icon(
+                    CupertinoIcons.chevron_back,
+                    color: GawenColors.text,
+                  ),
+                  onPressed: onBack ?? () => Navigator.of(context).maybePop(),
                 ),
-                icon: const Icon(
-                  CupertinoIcons.chevron_back,
-                  color: GawenColors.text,
-                ),
-                onPressed: onBack ?? () => Navigator.of(context).maybePop(),
               ),
             ),
-          )
+        )
         : null,
     leadingWidth: isLeadingEnabled ? leadingWidth : 0,
     centerTitle: false,

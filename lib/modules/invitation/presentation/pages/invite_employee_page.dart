@@ -86,52 +86,59 @@ class _InviteEmployeePageState extends State<InviteEmployeePage> {
               GawenToast.error(context, message: state.emailInvitationMessage!),
         ),
       ],
-      child: Scaffold(
-        appBar: GawenAppBar(title: 'Undang Karyawan', isLeadingEnabled: true),
-        body: SafeArea(
-          child: BlocBuilder<OrganizationBloc, OrganizationState>(
-            builder: (context, organizationState) {
-              final organizationId = context
-                  .read<AuthBloc>()
-                  .state
-                  .organizationId;
-              return ListView(
-                padding: const EdgeInsets.fromLTRB(20, 10, 20, 28),
-                children: [
-                  JoinCodeCard(
-                    code:
-                        organizationState.businessJoinCodeOrganizationId ==
-                            organizationId
-                        ? organizationState.businessJoinCode
-                        : null,
-                    loading:
-                        organizationState.businessJoinCodeStatus ==
-                            BusinessJoinCodeStatus.initial ||
-                        organizationState.businessJoinCodeStatus ==
-                            BusinessJoinCodeStatus.loading,
-                    rotating:
-                        organizationState.businessJoinCodeStatus ==
-                        BusinessJoinCodeStatus.rotating,
-                    message: organizationState.businessJoinCodeMessage,
-                    onRetry: _loadBusinessCode,
-                    onCopy: _copyBusinessCode,
-                    onShare: _shareBusinessCode,
-                    onGenerate: _confirmCodeRotation,
-                  ),
-                  const SizedBox(height: 16),
-                  BlocBuilder<InvitationBloc, InvitationState>(
-                    builder: (context, invitationState) =>
-                        _EmailInvitationSection(
-                          formKey: _formKey,
-                          controller: _emailController,
-                          state: invitationState,
-                          onSubmit: _createEmailInvitation,
-                        ),
-                  ),
-                ],
-              );
-            },
-          ),
+      child: GawenPage(
+        appBar: GawenAppBar(
+          title: 'Undang Karyawan',
+          isLeadingEnabled: true,
+          leadingWidth: 60.0,
+        ),
+        padding: EdgeInsets.zero,
+        scrollable: false,
+        child: BlocBuilder<OrganizationBloc, OrganizationState>(
+          builder: (context, organizationState) {
+            final organizationId = context
+                .read<AuthBloc>()
+                .state
+                .organizationId;
+            return ListView(
+              padding: const EdgeInsets.symmetric(
+                horizontal: GawenSpacing.pageHorizontal,
+                vertical: GawenSpacing.pageVertical,
+              ),
+              children: [
+                JoinCodeCard(
+                  code:
+                      organizationState.businessJoinCodeOrganizationId ==
+                          organizationId
+                      ? organizationState.businessJoinCode
+                      : null,
+                  loading:
+                      organizationState.businessJoinCodeStatus ==
+                          BusinessJoinCodeStatus.initial ||
+                      organizationState.businessJoinCodeStatus ==
+                          BusinessJoinCodeStatus.loading,
+                  rotating:
+                      organizationState.businessJoinCodeStatus ==
+                      BusinessJoinCodeStatus.rotating,
+                  message: organizationState.businessJoinCodeMessage,
+                  onRetry: _loadBusinessCode,
+                  onCopy: _copyBusinessCode,
+                  onShare: _shareBusinessCode,
+                  onGenerate: _confirmCodeRotation,
+                ),
+                const SizedBox(height: 16),
+                BlocBuilder<InvitationBloc, InvitationState>(
+                  builder: (context, invitationState) =>
+                      _EmailInvitationSection(
+                        formKey: _formKey,
+                        controller: _emailController,
+                        state: invitationState,
+                        onSubmit: _createEmailInvitation,
+                      ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );

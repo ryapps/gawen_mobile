@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/route_names.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/gawen_widgets.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../bloc/invitation_bloc.dart';
@@ -112,90 +113,94 @@ class _AcceptInvitationPageState extends State<AcceptInvitationPage> {
       final authenticated = context.select(
         (AuthBloc bloc) => bloc.state.hasVerifiedSession,
       );
-      return Scaffold(
-        body: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                GawenAppBar(
-                  isLeadingEnabled: true,
-                  title: 'Terima Undangan',
-                  onBack: () => authenticated
-                      ? context.go(AppRoutes.home)
-                      : context.go(AppRoutes.welcome),
+      return GawenPage(
+        padding: EdgeInsets.zero,
+        scrollable: false,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(
+            horizontal: GawenSpacing.pageHorizontal,
+            vertical: GawenSpacing.pageVertical,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              GawenAppBar(
+                isLeadingEnabled: true,
+                leadingWidth: 60.0,
+                title: 'Terima Undangan',
+                onBack: () => authenticated
+                    ? context.go(AppRoutes.home)
+                    : context.go(AppRoutes.welcome),
+              ),
+              const SizedBox(height: 22),
+              const ScreenIntro(
+                title: 'Undangan untukmu',
+                description:
+                    'Tempel token undangan dari tautan yang diberikan pemilik usaha. Detail undangan akan dikonfirmasi oleh server saat diterima.',
+              ),
+              if (!authenticated)
+                GawenRequestError(
+                  message:
+                      'Masuk dengan alamat email yang menerima undangan sebelum menerimanya.',
                 ),
-                const SizedBox(height: 22),
-                const ScreenIntro(
-                  title: 'Undangan untukmu',
-                  description:
-                      'Tempel token undangan dari tautan yang diberikan pemilik usaha. Detail undangan akan dikonfirmasi oleh server saat diterima.',
+              if (state.status == InvitationStatus.accepted)
+                const GawenRequestError(
+                  message:
+                      'Undangan diterima. Sedang memverifikasi akses organisasi.',
                 ),
-                if (!authenticated)
-                  GawenRequestError(
-                    message:
-                        'Masuk dengan alamat email yang menerima undangan sebelum menerimanya.',
-                  ),
-                if (state.status == InvitationStatus.accepted)
-                  const GawenRequestError(
-                    message:
-                        'Undangan diterima. Sedang memverifikasi akses organisasi.',
-                  ),
-                Form(
-                  key: _formKey,
-                  child: GawenTextField(
-                    controller: _tokenController,
-                    label: 'Token undangan',
-                    hint: 'Tempel token dari tautan undangan',
-                    icon: Icons.mail_outline,
-                    textInputAction: TextInputAction.done,
-                    validator: (value) {
-                      final token = value?.trim() ?? '';
-                      if (!RegExp(r'^[A-Za-z0-9_-]{43,64}$').hasMatch(token)) {
-                        return 'Token undangan tidak sesuai format.';
-                      }
-                      return null;
-                    },
-                  ),
+              Form(
+                key: _formKey,
+                child: GawenTextField(
+                  controller: _tokenController,
+                  label: 'Token undangan',
+                  hint: 'Tempel token dari tautan undangan',
+                  icon: Icons.mail_outline,
+                  textInputAction: TextInputAction.done,
+                  validator: (value) {
+                    final token = value?.trim() ?? '';
+                    if (!RegExp(r'^[A-Za-z0-9_-]{43,64}$').hasMatch(token)) {
+                      return 'Token undangan tidak sesuai format.';
+                    }
+                    return null;
+                  },
                 ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: GawenPrimaryButton(
-                    label: authenticated
-                        ? 'Terima Undangan'
-                        : 'Masuk dan lanjutkan',
-                    onPressed: _submit,
-                    isLoading: loading,
-                  ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: GawenPrimaryButton(
+                  label: authenticated
+                      ? 'Terima Undangan'
+                      : 'Masuk dan lanjutkan',
+                  onPressed: _submit,
+                  isLoading: loading,
                 ),
-                if (!authenticated)
-                  Center(
-                    child: TextButton(
-                      onPressed: () => context.go(
-                        AppRoutes.login,
-                        extra: InvitationLoginIntent(
-                          _tokenController.text.trim(),
-                        ),
+              ),
+              if (!authenticated)
+                Center(
+                  child: TextButton(
+                    onPressed: () => context.go(
+                      AppRoutes.login,
+                      extra: InvitationLoginIntent(
+                        _tokenController.text.trim(),
                       ),
-                      child: const Text('Masuk ke akun'),
                     ),
+                    child: const Text('Masuk ke akun'),
                   ),
-                if (!authenticated)
-                  Center(
-                    child: TextButton(
-                      onPressed: () => context.push(
-                        AppRoutes.employeeRegistration,
-                        extra: InvitationLoginIntent(
-                          _tokenController.text.trim(),
-                        ),
+                ),
+              if (!authenticated)
+                Center(
+                  child: TextButton(
+                    onPressed: () => context.push(
+                      AppRoutes.employeeRegistration,
+                      extra: InvitationLoginIntent(
+                        _tokenController.text.trim(),
                       ),
-                      child: const Text('Buat akun karyawan'),
                     ),
+                    child: const Text('Buat akun karyawan'),
                   ),
-              ],
-            ),
+                ),
+            ],
           ),
         ),
       );

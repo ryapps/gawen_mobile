@@ -16,54 +16,53 @@ class EmployeeHomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthBloc>().state;
     final organization = auth.activeMembership?.organization;
-    return Scaffold(
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(22, 18, 22, 24),
-          children: [
-            const GawenLogo(),
-            const SizedBox(height: 28),
-            const Text(
-              'DASHBOARD KARYAWAN',
-              style: TextStyle(
-                color: GawenColors.primary,
-                fontSize: 10,
-                letterSpacing: 1.4,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Halo, ${auth.userName}',
-              style: const TextStyle(fontSize: 25, fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              organization?.name ?? 'Tempat kerja terhubung',
-              style: const TextStyle(color: GawenColors.muted, fontSize: 14),
-            ),
-            const SizedBox(height: 22),
-            _EmployeeSummary(
-              organizationName: organization?.name ?? 'Tempat kerja',
-            ),
-            const SizedBox(height: 22),
-            const Text(
-              'Untukmu',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 12),
-            HomeActionCard(
-              icon: Icons.storefront_outlined,
-              title: 'Informasi tempat kerja',
-              subtitle: 'Lihat informasi organisasi yang mengizinkan akses',
-              onTap: () => context.go(AppRoutes.organization),
-            ),
-          ],
-        ),
-      ),
+    return GawenPage(
       bottomNavigationBar: MainNavigation(
         isOwner: false,
         currentPath: AppRoutes.home,
+      ),
+      scrollable: false,
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          const GawenLogo(),
+          const SizedBox(height: 28),
+          const Text(
+            'DASHBOARD KARYAWAN',
+            style: TextStyle(
+              color: GawenColors.primary,
+              fontSize: 10,
+              letterSpacing: 1.4,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Halo, ${auth.userName}',
+            style: const TextStyle(fontSize: 25, fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            organization?.name ?? 'Tempat kerja terhubung',
+            style: const TextStyle(color: GawenColors.muted, fontSize: 14),
+          ),
+          const SizedBox(height: 22),
+          _EmployeeSummary(
+            organizationName: organization?.name ?? 'Tempat kerja',
+          ),
+          const SizedBox(height: 22),
+          const Text(
+            'Untukmu',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 12),
+          HomeActionCard(
+            icon: Icons.storefront_outlined,
+            title: 'Informasi tempat kerja',
+            subtitle: 'Lihat informasi organisasi yang mengizinkan akses',
+            onTap: () => context.go(AppRoutes.organization),
+          ),
+        ],
       ),
     );
   }

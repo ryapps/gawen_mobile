@@ -45,73 +45,69 @@ class _OwnerJoinRequestsPageState extends State<OwnerJoinRequestsPage> {
         context.read<EmployeeBloc>().add(const ManagedEmployeesRequested());
       }
     },
-    builder: (context, state) => Scaffold(
+    builder: (context, state) => GawenPage(
       appBar: GawenAppBar(
         title: 'Permintaan Bergabung',
 
         isLeadingEnabled: true,
+        leadingWidth: 60.0,
       ),
-      body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: _refresh,
-          child: ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-            children: [
-              Row(
-                children: [
-                  const Expanded(
-                    child: Text(
-                      'Permintaan masuk',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                  _PendingCount(count: state.ownerRequests.length),
-                ],
-              ),
-              const SizedBox(height: 6),
-              const Text(
-                'Tinjau calon karyawan yang ingin bergabung dengan tim Anda.',
-                style: TextStyle(color: GawenColors.muted, fontSize: 13),
-              ),
-              const SizedBox(height: 18),
-              if (state.ownerRequestsStatus ==
-                      OwnerJoinRequestsStatus.loading &&
-                  state.ownerRequests.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.all(28),
-                  child: GawenLoading(),
-                )
-              else ...[
-                if (state.ownerRequestsStatus ==
-                        OwnerJoinRequestsStatus.failure &&
-                    state.ownerRequests.isEmpty)
-                  GawenRequestError(
-                    message:
-                        state.ownerRequestsMessage ??
-                        'Permintaan bergabung gagal dimuat.',
-                    onRetry: _loadRequests,
-                  ),
-                if (state.ownerRequests.isEmpty &&
-                    state.ownerRequestsStatus !=
-                        OwnerJoinRequestsStatus.failure)
-                  const GawenEmptyState(title: 'Belum ada permintaan bergabung')
-                else
-                  ...state.ownerRequests.map(
-                    (request) => _JoinRequestCard(
-                      request: request,
-                      busy:
-                          state.ownerRequestsStatus ==
-                          OwnerJoinRequestsStatus.mutating,
-                      onDecision: (approve) => _decide(request.id, approve),
-                    ),
-                  ),
-              ],
-            ],
+      padding: EdgeInsets.zero,
+      scrollable: false,
+      child: RefreshIndicator(
+        onRefresh: _refresh,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.symmetric(
+            horizontal: GawenSpacing.pageHorizontal,
+            vertical: GawenSpacing.pageVertical,
           ),
+          children: [
+            Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Permintaan masuk',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                  ),
+                ),
+                _PendingCount(count: state.ownerRequests.length),
+              ],
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Tinjau calon karyawan yang ingin bergabung dengan tim Anda.',
+              style: TextStyle(color: GawenColors.muted, fontSize: 13),
+            ),
+            const SizedBox(height: 18),
+            if (state.ownerRequestsStatus == OwnerJoinRequestsStatus.loading &&
+                state.ownerRequests.isEmpty)
+              const Padding(padding: EdgeInsets.all(28), child: GawenLoading())
+            else ...[
+              if (state.ownerRequestsStatus ==
+                      OwnerJoinRequestsStatus.failure &&
+                  state.ownerRequests.isEmpty)
+                GawenRequestError(
+                  message:
+                      state.ownerRequestsMessage ??
+                      'Permintaan bergabung gagal dimuat.',
+                  onRetry: _loadRequests,
+                ),
+              if (state.ownerRequests.isEmpty &&
+                  state.ownerRequestsStatus != OwnerJoinRequestsStatus.failure)
+                const GawenEmptyState(title: 'Belum ada permintaan bergabung')
+              else
+                ...state.ownerRequests.map(
+                  (request) => _JoinRequestCard(
+                    request: request,
+                    busy:
+                        state.ownerRequestsStatus ==
+                        OwnerJoinRequestsStatus.mutating,
+                    onDecision: (approve) => _decide(request.id, approve),
+                  ),
+                ),
+            ],
+          ],
         ),
       ),
     ),

@@ -27,76 +27,73 @@ class PendingApprovalPage extends StatelessWidget {
     builder: (context, state) {
       final loading = state.status == AuthStatus.loading;
       final organizationName = state.pendingRequest?.organization?.name;
-      return Scaffold(
-        body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                GawenAppBar(
-                  isLeadingEnabled: true,
-                  onBack: () => context.go(AppRoutes.join),
-                ),
-                const Spacer(),
-                const Icon(
-                  Icons.schedule_rounded,
-                  size: 76,
-                  color: GawenColors.warning,
-                ),
-                const SizedBox(height: 24),
-                const Text(
-                  'Menunggu Persetujuan',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 25, fontWeight: FontWeight.w800),
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'Permintaan bergabungmu sedang menunggu persetujuan pemilik usaha. Fitur organisasi belum dapat diakses sampai keanggotaan disetujui.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: GawenColors.muted, height: 1.55),
-                ),
-                if (organizationName != null) ...[
-                  const SizedBox(height: 20),
-                  Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      border: Border.all(color: GawenColors.border),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Text(
-                      organizationName,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                  ),
-                ],
-                const Spacer(),
-                FilledButton(
-                  onPressed: loading
-                      ? null
-                      : () => context.read<AuthBloc>().add(
-                          const SessionRestoreRequested(),
-                        ),
-                  child: loading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Text('Periksa Status'),
-                ),
-                TextButton(
-                  onPressed: () => context.go(AppRoutes.join),
-                  child: const Text('Gunakan kode bisnis lain'),
-                ),
-              ],
+      return GawenPage(
+        scrollable: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            GawenAppBar(
+              isLeadingEnabled: true,
+              leadingWidth: 60.0,
+              onBack: () => context.go(AppRoutes.join),
             ),
-          ),
+            const Spacer(),
+            const Icon(
+              Icons.schedule_rounded,
+              size: 76,
+              color: GawenColors.warning,
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Menunggu Persetujuan',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 25, fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Permintaan bergabungmu sedang menunggu persetujuan pemilik usaha. Fitur organisasi belum dapat diakses sampai keanggotaan disetujui.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: GawenColors.muted, height: 1.55),
+            ),
+            if (organizationName != null) ...[
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border.all(color: GawenColors.border),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Text(
+                  organizationName,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ),
+            ],
+            const Spacer(),
+            FilledButton(
+              onPressed: loading
+                  ? null
+                  : () => context.read<AuthBloc>().add(
+                      const SessionRestoreRequested(),
+                    ),
+              child: loading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text('Periksa Status'),
+            ),
+            TextButton(
+              onPressed: () => context.go(AppRoutes.join),
+              child: const Text('Gunakan kode bisnis lain'),
+            ),
+          ],
         ),
       );
     },

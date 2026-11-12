@@ -26,6 +26,8 @@ abstract final class GawenSpacing {
   static const lg = 16.0;
   static const xl = 24.0;
   static const xxl = 32.0;
+  static const pageHorizontal = 20.0;
+  static const pageVertical = 16.0;
 }
 
 abstract final class GawenRadius {

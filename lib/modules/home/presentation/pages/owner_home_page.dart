@@ -49,91 +49,90 @@ class _OwnerHomePageState extends State<OwnerHomePage> {
     }
 
     final organizationFromProfile = auth.activeMembership?.organization;
-    return Scaffold(
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(22, 18, 22, 24),
-          children: [
-            const GawenLogo(),
-            const SizedBox(height: 28),
-            const Text(
-              'DASHBOARD PEMILIK',
-              style: TextStyle(
-                color: GawenColors.primary,
-                fontSize: 10,
-                letterSpacing: 1.4,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Halo, ${auth.userName}',
-              style: const TextStyle(fontSize: 25, fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              organizationFromProfile?.name ?? 'Tempat kerja terhubung',
-              style: const TextStyle(color: GawenColors.muted, fontSize: 14),
-            ),
-            const SizedBox(height: 22),
-            BlocBuilder<OrganizationBloc, OrganizationState>(
-              builder: (context, state) {
-                final organization = state.organization;
-                final name =
-                    organization?.name ??
-                    organizationFromProfile?.name ??
-                    'Usaha';
-                return _OwnerSummary(
-                  organizationName: name,
-                  memberCount: organization?.memberCount,
-                  loading: state.status == OrganizationStatus.loading,
-                  onRetry: () {
-                    if (organizationId != null) {
-                      context.read<OrganizationBloc>().add(
-                        OrganizationLoadRequested(organizationId),
-                      );
-                    }
-                  },
-                );
-              },
-            ),
-            const SizedBox(height: 12),
-            BlocBuilder<InvitationBloc, InvitationState>(
-              builder: (context, invitationState) => _PendingSummary(
-                count: invitationState.ownerRequests.length,
-                loading:
-                    invitationState.ownerRequestsStatus ==
-                    OwnerJoinRequestsStatus.loading,
-                failed:
-                    invitationState.ownerRequestsStatus ==
-                    OwnerJoinRequestsStatus.failure,
-                onTap: () => context.go(AppRoutes.inviteEmployee),
-              ),
-            ),
-            const SizedBox(height: 22),
-            const Text(
-              'Akses cepat',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 12),
-            HomeActionCard(
-              icon: Icons.groups_outlined,
-              title: 'Karyawan',
-              subtitle: 'Kelola anggota tim',
-              onTap: () => context.go(AppRoutes.employees),
-            ),
-            HomeActionCard(
-              icon: Icons.storefront_outlined,
-              title: 'Informasi usaha',
-              subtitle: 'Lihat atau ubah informasi organisasi',
-              onTap: () => context.go(AppRoutes.organization),
-            ),
-          ],
-        ),
-      ),
+    return GawenPage(
       bottomNavigationBar: MainNavigation(
         isOwner: true,
         currentPath: AppRoutes.home,
+      ),
+      scrollable: false,
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          const GawenLogo(),
+          const SizedBox(height: 28),
+          const Text(
+            'DASHBOARD PEMILIK',
+            style: TextStyle(
+              color: GawenColors.primary,
+              fontSize: 10,
+              letterSpacing: 1.4,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Halo, ${auth.userName}',
+            style: const TextStyle(fontSize: 25, fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            organizationFromProfile?.name ?? 'Tempat kerja terhubung',
+            style: const TextStyle(color: GawenColors.muted, fontSize: 14),
+          ),
+          const SizedBox(height: 22),
+          BlocBuilder<OrganizationBloc, OrganizationState>(
+            builder: (context, state) {
+              final organization = state.organization;
+              final name =
+                  organization?.name ??
+                  organizationFromProfile?.name ??
+                  'Usaha';
+              return _OwnerSummary(
+                organizationName: name,
+                memberCount: organization?.memberCount,
+                loading: state.status == OrganizationStatus.loading,
+                onRetry: () {
+                  if (organizationId != null) {
+                    context.read<OrganizationBloc>().add(
+                      OrganizationLoadRequested(organizationId),
+                    );
+                  }
+                },
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+          BlocBuilder<InvitationBloc, InvitationState>(
+            builder: (context, invitationState) => _PendingSummary(
+              count: invitationState.ownerRequests.length,
+              loading:
+                  invitationState.ownerRequestsStatus ==
+                  OwnerJoinRequestsStatus.loading,
+              failed:
+                  invitationState.ownerRequestsStatus ==
+                  OwnerJoinRequestsStatus.failure,
+              onTap: () => context.go(AppRoutes.inviteEmployee),
+            ),
+          ),
+          const SizedBox(height: 22),
+          const Text(
+            'Akses cepat',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 12),
+          HomeActionCard(
+            icon: Icons.groups_outlined,
+            title: 'Karyawan',
+            subtitle: 'Kelola anggota tim',
+            onTap: () => context.go(AppRoutes.employees),
+          ),
+          HomeActionCard(
+            icon: Icons.storefront_outlined,
+            title: 'Informasi usaha',
+            subtitle: 'Lihat atau ubah informasi organisasi',
+            onTap: () => context.go(AppRoutes.organization),
+          ),
+        ],
       ),
     );
   }

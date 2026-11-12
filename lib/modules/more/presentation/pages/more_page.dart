@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/gawen_avatar.dart';
+import '../../../../core/widgets/gawen_page.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../../core/widgets/main_navigation.dart';
 
@@ -42,7 +43,7 @@ class MorePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthBloc>().state;
-    return Scaffold(
+    return GawenPage(
       appBar: GawenAppBar(
         title: 'Lainnya',
         subtitle: 'Profil & pengaturan akun',
@@ -51,8 +52,16 @@ class MorePage extends StatelessWidget {
           onPressed: () => {},
         ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
+      bottomNavigationBar: MainNavigation(
+        isOwner: auth.isOwner,
+        currentPath: AppRoutes.more,
+      ),
+      scrollable: false,
+      padding: EdgeInsets.symmetric(
+        horizontal: GawenSpacing.pageHorizontal,
+      ),
+      child: ListView(
+        padding: EdgeInsets.zero,
         children: [
           Container(
             padding: const EdgeInsets.all(16),
@@ -182,10 +191,6 @@ class MorePage extends StatelessWidget {
             onTap: () => _confirmLogout(context),
           ),
         ],
-      ),
-      bottomNavigationBar: MainNavigation(
-        isOwner: auth.isOwner,
-        currentPath: AppRoutes.more,
       ),
     );
   }

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend/core/widgets/app_bar.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/gawen_toast.dart';
 import '../../../../core/widgets/gawen_button.dart';
 import '../../../../core/widgets/gawen_loading.dart';
+import '../../../../core/widgets/gawen_page.dart';
 import '../../../../core/widgets/gawen_text_field.dart';
 import '../../../../core/widgets/request_error.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
@@ -94,12 +96,15 @@ class _EditEmployeePageState extends State<EditEmployeePage> {
         final loading =
             state.detailStatus == EmployeeDetailStatus.loading &&
             employee == null;
-        return Scaffold(
+        return GawenPage(
           appBar: GawenAppBar(
             title: 'Edit Informasi Pekerjaan',
             isLeadingEnabled: true,
+            leadingWidth: 60.0,
           ),
-          body: loading
+          padding: EdgeInsets.zero,
+          scrollable: false,
+          child: loading
               ? const GawenLoading()
               : employee == null
               ? Center(
@@ -126,7 +131,10 @@ class _EditEmployeePageState extends State<EditEmployeePage> {
               : Form(
                   key: _formKey,
                   child: ListView(
-                    padding: const EdgeInsets.all(22),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: GawenSpacing.pageHorizontal,
+                      vertical: GawenSpacing.pageVertical,
+                    ),
                     children: [
                       GawenTextField(
                         controller: _positionController,

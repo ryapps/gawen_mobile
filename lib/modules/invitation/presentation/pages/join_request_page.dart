@@ -72,82 +72,78 @@ class _JoinRequestsPageState extends State<JoinRequestsPage> {
         current.invitationInboxStatus == InvitationInboxStatus.accepted,
     listener: (context, state) =>
         unawaited(_restoreAfterInvitationAcceptance()),
-    builder: (context, state) => Scaffold(
-      body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: () async {
-            if (state.status == InvitationStatus.loading) {
-              await context.read<InvitationBloc>().stream.firstWhere(
-                (next) => next.status != InvitationStatus.loading,
-              );
-              return;
-            }
-            context.read<InvitationBloc>().add(
-              const RequestsRefreshRequested(),
-            );
+    builder: (context, state) => GawenPage(
+      padding: EdgeInsets.zero,
+      scrollable: false,
+      child: RefreshIndicator(
+        onRefresh: () async {
+          if (state.status == InvitationStatus.loading) {
             await context.read<InvitationBloc>().stream.firstWhere(
               (next) => next.status != InvitationStatus.loading,
             );
-          },
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
-            children: [
-              GawenAppBar(
-                isLeadingEnabled: true,
-              ),
+            return;
+          }
+          context.read<InvitationBloc>().add(const RequestsRefreshRequested());
+          await context.read<InvitationBloc>().stream.firstWhere(
+            (next) => next.status != InvitationStatus.loading,
+          );
+        },
+        child: ListView(
+          padding: const EdgeInsets.symmetric(
+            horizontal: GawenSpacing.pageHorizontal,
+            vertical: GawenSpacing.pageVertical,
+          ),
+          children: [
+            GawenAppBar(isLeadingEnabled: true, leadingWidth: 60.0),
+            const SizedBox(height: 20),
+            const ScreenIntro(
+              title: 'Status Permintaan',
+              description: 'Status terbaru permintaan bergabungmu dari server.',
+            ),
+            if (state.ownInvitations.isNotEmpty) ...[
               const SizedBox(height: 20),
-              const ScreenIntro(
-                title: 'Status Permintaan',
-                description:
-                    'Status terbaru permintaan bergabungmu dari server.',
+              const GawenSectionTitle('Undangan untukmu'),
+              const SizedBox(height: 12),
+              ...state.ownInvitations.map(
+                (invitation) => _invitationCard(invitation, state),
               ),
-              if (state.ownInvitations.isNotEmpty) ...[
-                const SizedBox(height: 20),
-                const GawenSectionTitle('Undangan untukmu'),
-                const SizedBox(height: 12),
-                ...state.ownInvitations.map(
-                  (invitation) => _invitationCard(invitation, state),
+            ],
+            if (state.invitationInboxStatus == InvitationInboxStatus.failure)
+              GawenRequestError(
+                message:
+                    state.invitationInboxMessage ?? 'Undangan gagal dimuat.',
+                onRetry: () => context.read<InvitationBloc>().add(
+                  const RequestsRefreshRequested(),
                 ),
-              ],
-              if (state.invitationInboxStatus == InvitationInboxStatus.failure)
-                GawenRequestError(
-                  message:
-                      state.invitationInboxMessage ?? 'Undangan gagal dimuat.',
+              ),
+            if (state.status == InvitationStatus.loading)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 32),
+                child: GawenLoading(),
+              )
+            else if (state.status == InvitationStatus.failure)
+              Padding(
+                padding: const EdgeInsets.only(top: 16),
+                child: GawenRequestError(
+                  message: state.message ?? 'Gagal memuat status.',
                   onRetry: () => context.read<InvitationBloc>().add(
                     const RequestsRefreshRequested(),
                   ),
                 ),
-              if (state.status == InvitationStatus.loading)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 32),
-                  child: GawenLoading(),
-                )
-              else if (state.status == InvitationStatus.failure)
-                Padding(
-                  padding: const EdgeInsets.only(top: 16),
-                  child: GawenRequestError(
-                    message: state.message ?? 'Gagal memuat status.',
-                    onRetry: () => context.read<InvitationBloc>().add(
-                      const RequestsRefreshRequested(),
-                    ),
-                  ),
-                )
-              else if (state.requests.isEmpty && state.ownInvitations.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.only(top: 24),
-                  child: GawenEmptyState(
-                    title: 'Belum ada permintaan bergabung',
-                  ),
-                )
-              else
-                ...state.requests.map(_requestCard),
-              const SizedBox(height: 20),
-              GawenPrimaryButton(
-                label: 'Masukkan Kode Bisnis',
-                onPressed: () => context.push(AppRoutes.join),
-              ),
-            ],
-          ),
+              )
+            else if (state.requests.isEmpty && state.ownInvitations.isEmpty)
+              const Padding(
+                padding: EdgeInsets.only(top: 24),
+                child: GawenEmptyState(title: 'Belum ada permintaan bergabung'),
+              )
+            else
+              ...state.requests.map(_requestCard),
+            const SizedBox(height: 20),
+            GawenPrimaryButton(
+              label: 'Masukkan Kode Bisnis',
+              onPressed: () => context.push(AppRoutes.join),
+            ),
+          ],
         ),
       ),
     ),

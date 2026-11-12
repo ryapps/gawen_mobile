@@ -8,6 +8,7 @@ import '../../../../core/router/route_names.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/gawen_avatar.dart';
 import '../../../../core/widgets/gawen_loading.dart';
+import '../../../../core/widgets/gawen_page.dart';
 import '../../../../core/widgets/gawen_toast.dart';
 import '../../../../core/widgets/request_error.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
@@ -53,9 +54,15 @@ class _EmployeeDetailPageState extends State<EmployeeDetailPage> {
             ? state.selectedEmployee
             : null;
         final loading = state.detailStatus == EmployeeDetailStatus.loading;
-        return Scaffold(
-          appBar: GawenAppBar(title: 'Detail Karyawan', isLeadingEnabled: true),
-          body: loading && employee == null
+        return GawenPage(
+          appBar: GawenAppBar(
+            title: 'Detail Karyawan',
+            isLeadingEnabled: true,
+            leadingWidth: 60.0,
+          ),
+          padding: EdgeInsets.zero,
+          scrollable: false,
+          child: loading && employee == null
               ? const GawenLoading()
               : employee == null
               ? _LoadFailure(
@@ -63,7 +70,10 @@ class _EmployeeDetailPageState extends State<EmployeeDetailPage> {
                   onRetry: _reload,
                 )
               : ListView(
-                  padding: const EdgeInsets.all(22),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: GawenSpacing.pageHorizontal,
+                    vertical: GawenSpacing.pageVertical,
+                  ),
                   children: [
                     Center(
                       child: GawenAvatar(

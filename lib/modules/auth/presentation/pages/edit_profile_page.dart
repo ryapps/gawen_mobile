@@ -7,10 +7,11 @@ import 'package:frontend/core/widgets/gawen_toast.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../../../../core/theme/app_theme.dart';
 import '../../../../core/network/api_failure.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/gawen_avatar.dart';
 import '../../../../core/widgets/gawen_button.dart';
+import '../../../../core/widgets/gawen_page.dart';
 import '../../../../core/widgets/gawen_text_field.dart';
 import '../bloc/auth_bloc.dart';
 
@@ -188,93 +189,93 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: GawenAppBar(title: 'Edit Profil', isLeadingEnabled: true),
-    body: SafeArea(
-      child: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(20),
-          children: [
-            Center(
-              child: InkWell(
-                onTap: _saving ? null : _pickAvatar,
-                customBorder: const CircleBorder(),
-                child: Stack(
-                  alignment: Alignment.bottomRight,
-                  children: [
-                    CircleAvatar(
-                      radius: 48,
-                      backgroundColor: GawenColors.primarySoft,
-                      child: ClipOval(
-                        child: _selectedAvatarPath != null
-                            ? Image.file(
-                                File(_selectedAvatarPath!),
-                                width: 96,
-                                height: 96,
-                                fit: BoxFit.cover,
-                              )
-                            : GawenAvatar(
-                                imageUrl: _photoProfile.text,
-                                size: 96,
-                              ),
-                      ),
+  Widget build(BuildContext context) => GawenPage(
+    appBar: GawenAppBar(
+      title: 'Edit Profil',
+      isLeadingEnabled: true,
+      leadingWidth: 60.0,
+    ),
+    scrollable: false,
+    child: Form(
+      key: _formKey,
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          Center(
+            child: InkWell(
+              onTap: _saving ? null : _pickAvatar,
+              customBorder: const CircleBorder(),
+              child: Stack(
+                alignment: Alignment.bottomRight,
+                children: [
+                  CircleAvatar(
+                    radius: 48,
+                    backgroundColor: GawenColors.primarySoft,
+                    child: ClipOval(
+                      child: _selectedAvatarPath != null
+                          ? Image.file(
+                              File(_selectedAvatarPath!),
+                              width: 96,
+                              height: 96,
+                              fit: BoxFit.cover,
+                            )
+                          : GawenAvatar(imageUrl: _photoProfile.text, size: 96),
                     ),
-                    const CircleAvatar(
-                      radius: 16,
-                      backgroundColor: GawenColors.primary,
-                      child: Icon(
-                        Icons.camera_alt_outlined,
-                        size: 17,
-                        color: Colors.white,
-                      ),
+                  ),
+                  const CircleAvatar(
+                    radius: 16,
+                    backgroundColor: GawenColors.primary,
+                    child: Icon(
+                      Icons.camera_alt_outlined,
+                      size: 17,
+                      color: Colors.white,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 8),
-            const Center(
-              child: Text(
-                'Ketuk foto untuk mengganti',
-                style: TextStyle(color: GawenColors.muted),
-              ),
+          ),
+          const SizedBox(height: 8),
+          const Center(
+            child: Text(
+              'Ketuk foto untuk mengganti',
+              style: TextStyle(color: GawenColors.muted),
             ),
-            const SizedBox(height: 16),
-            GawenTextField(
-              controller: _name,
-              label: 'Nama lengkap *',
-              hint: 'Nama lengkap',
-              validator: _validateName,
-              textCapitalization: TextCapitalization.words,
-            ),
-            GawenTextField(
-              controller: _email,
-              label: 'Email',
-              hint: 'Email',
-              keyboardType: TextInputType.emailAddress,
-              enabled: false,
-            ),
-            GawenTextField(
-              controller: _phone,
-              label: 'Nomor telepon *',
-              hint: '81234567890',
-              keyboardType: TextInputType.phone,
-              indonesianPhone: true,
-              validator: _validatePhone,
-            ),
-            if (_error != null) ...[
-              const SizedBox(height: 12),
-              Text(_error!, style: const TextStyle(color: Colors.red)),
-            ],
-            const SizedBox(height: 24),
-            GawenPrimaryButton(
-              label: 'Simpan perubahan',
-              onPressed: _save,
-              isLoading: _saving,
-            ),
+          ),
+          const SizedBox(height: 16),
+          GawenTextField(
+            controller: _name,
+            label: 'Nama lengkap *',
+            hint: 'Nama lengkap',
+            validator: _validateName,
+            textCapitalization: TextCapitalization.words,
+          ),
+          GawenTextField(
+            controller: _email,
+            label: 'Email',
+            hint: 'Email',
+            keyboardType: TextInputType.emailAddress,
+            enabled: false,
+          ),
+          GawenTextField(
+            controller: _phone,
+            label: 'Nomor telepon *',
+            hint: '81234567890',
+            keyboardType: TextInputType.phone,
+            indonesianPhone: true,
+            validator: _validatePhone,
+          ),
+          if (_error != null) ...[
+            const SizedBox(height: 12),
+            Text(_error!, style: const TextStyle(color: Colors.red)),
           ],
-        ),
+          const SizedBox(height: 24),
+          GawenPrimaryButton(
+            label: 'Simpan perubahan',
+            onPressed: _save,
+            isLoading: _saving,
+          ),
+        ],
       ),
     ),
   );

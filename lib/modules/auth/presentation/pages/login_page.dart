@@ -96,6 +96,7 @@ class _LoginPageState extends State<LoginPage> {
               children: [
                 GawenAppBar(
                   isLeadingEnabled: true,
+                  leadingWidth: 60.0,
                   onBack: () => widget.invitationToken == null
                       ? context.go(AppRoutes.welcome)
                       : context.go(

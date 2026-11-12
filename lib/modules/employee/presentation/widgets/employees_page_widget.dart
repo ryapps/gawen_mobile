@@ -71,7 +71,8 @@ class EmployeeListTile extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           EmployeeStatusBadge(status: employee.status),
-          const Icon(Icons.chevron_right),
+          const SizedBox(width: 8),
+          const Icon(CupertinoIcons.chevron_right),
         ],
       ),
       onTap: () => context.push(AppRoutes.employeeDetailPath(employee.id)),

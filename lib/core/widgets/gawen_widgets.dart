@@ -4,6 +4,7 @@ export 'gawen_avatar.dart';
 export 'gawen_button.dart';
 export 'gawen_popup_menu_button.dart';
 export 'gawen_toast.dart';
+export 'gawen_page.dart';
 export 'gawen_card.dart';
 export 'gawen_empty_state.dart';
 export 'gawen_loading.dart';
